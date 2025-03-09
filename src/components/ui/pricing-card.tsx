@@ -60,7 +60,7 @@ export function PricingCard({ tier, paymentFrequency, onSelect }: PricingCardPro
               format={{
                 style: "currency",
                 currency: "EUR",
-                trailingZeroDisplay: "stripIfInteger",
+                // Remove trailingZeroDisplay as it doesn't exist in the Format type
               }}
               value={price}
               className="text-4xl font-medium"

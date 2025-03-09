@@ -95,6 +95,22 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     }
   };
 
+  // Función para cambiar a la pestaña de registro
+  const switchToRegister = () => {
+    const registerTab = document.querySelector('[data-value="register"]') as HTMLElement;
+    if (registerTab) {
+      registerTab.click?.();
+    }
+  };
+
+  // Función para cambiar a la pestaña de login
+  const switchToLogin = () => {
+    const loginTab = document.querySelector('[data-value="login"]') as HTMLElement;
+    if (loginTab) {
+      loginTab.click?.();
+    }
+  };
+
   return (
     <Tabs defaultValue="login" className="w-full">
       <div className="bg-primary p-4 text-white">
@@ -147,7 +163,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             
             <p className="text-xs text-center text-muted-foreground">
               ¿No tienes una cuenta?{" "}
-              <a href="#" onClick={() => document.querySelector('[data-value="register"]')?.click()} className="text-primary hover:underline">
+              <a href="#" onClick={(e) => { e.preventDefault(); switchToRegister(); }} className="text-primary hover:underline">
                 Regístrate
               </a>
             </p>
@@ -198,7 +214,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             
             <p className="text-xs text-center text-muted-foreground">
               ¿Ya tienes una cuenta?{" "}
-              <a href="#" onClick={() => document.querySelector('[data-value="login"]')?.click()} className="text-primary hover:underline">
+              <a href="#" onClick={(e) => { e.preventDefault(); switchToLogin(); }} className="text-primary hover:underline">
                 Inicia sesión
               </a>
             </p>
