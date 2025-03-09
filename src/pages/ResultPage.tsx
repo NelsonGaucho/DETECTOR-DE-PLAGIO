@@ -3,7 +3,16 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, CheckCircle, Diamond, Link as LinkIcon, ExternalLink } from "lucide-react";
+import { 
+  AlertTriangle, 
+  CheckCircle, 
+  Diamond, 
+  Link as LinkIcon, 
+  ExternalLink,
+  Search,
+  Globe,
+  Clock
+} from "lucide-react";
 import { getPlagiarismResult } from "./Index";
 import { PlagiarismResult } from "@/utils/plagiarismCheck";
 import { useAuth } from "@/context/AuthContext";
@@ -61,7 +70,7 @@ const ResultPage = () => {
   return (
     <div className="min-h-screen py-32 px-4">
       <div className="w-full max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">Resultados del Análisis</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center">Resultados del Análisis en Tiempo Real</h1>
         
         <div className="grid gap-8 md:grid-cols-3">
           <div className="col-span-full md:col-span-1">
@@ -120,6 +129,16 @@ const ResultPage = () => {
                   </div>
                 </div>
                 
+                <div className="bg-secondary/50 p-3 rounded-lg">
+                  <div className="flex items-center text-sm space-x-2 mb-2">
+                    <Globe className="h-4 w-4 text-primary" />
+                    <span className="font-medium">Análisis en tiempo real</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Búsqueda realizada en fuentes actualizadas de internet
+                  </p>
+                </div>
+                
                 <Button
                   variant="default"
                   className="w-full rounded-full"
@@ -133,10 +152,17 @@ const ResultPage = () => {
           
           <div className="col-span-full md:col-span-2 space-y-8">
             <div className="bg-white/50 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-100 dark:border-slate-700">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <LinkIcon className="mr-2 h-5 w-5 text-primary" />
-                Fuentes detectadas
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold flex items-center">
+                  <LinkIcon className="mr-2 h-5 w-5 text-primary" />
+                  Fuentes detectadas en internet
+                </h3>
+                
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Search className="h-3 w-3 mr-1" />
+                  <span>Buscado en tiempo real</span>
+                </div>
+              </div>
               
               {result.sources.length > 0 ? (
                 <div className="space-y-4">
@@ -166,7 +192,12 @@ const ResultPage = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground">No se detectaron fuentes con coincidencias significativas.</p>
+                <div className="flex flex-col items-center justify-center py-8">
+                  <Search className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground text-center">
+                    No se detectaron fuentes con coincidencias significativas en la web.
+                  </p>
+                </div>
               )}
             </div>
             
@@ -258,6 +289,26 @@ const ResultPage = () => {
                 <li>Usa herramientas de parafraseo para mejorar la originalidad</li>
                 <li>Revisa la estructura y organización de tu documento</li>
               </ul>
+            </div>
+
+            <div className="bg-white/50 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-100 dark:border-slate-700">
+              <h3 className="text-xl font-semibold mb-4 flex items-center">
+                <Clock className="mr-2 h-5 w-5 text-primary" />
+                Metodología de análisis
+              </h3>
+              
+              <p className="text-muted-foreground mb-4">
+                Nuestro algoritmo avanzado analiza tu documento en tiempo real comparándolo con millones de fuentes en internet:
+              </p>
+              
+              <ol className="space-y-3 list-decimal list-inside text-muted-foreground">
+                <li>Extracción de texto del documento subido</li>
+                <li>División del contenido en segmentos analizables</li>
+                <li>Búsqueda en tiempo real en motores de búsqueda especializados</li>
+                <li>Comparación de coincidencias textuales con fuentes indexadas</li>
+                <li>Verificación avanzada de similitud semántica</li>
+                <li>Cálculo de porcentaje de originalidad</li>
+              </ol>
             </div>
           </div>
         </div>
