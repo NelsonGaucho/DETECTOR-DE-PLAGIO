@@ -69,7 +69,7 @@ const FileUploader = ({ onFileSelected }: FileUploaderProps) => {
     try {
       setIsUploading(true);
       await onFileSelected(selectedFile);
-      navigate("/resultado");
+      // No need to navigate here as it's handled in the Index component
     } catch (error) {
       console.error("Error processing file:", error);
       toast.error("Error al procesar el archivo");
