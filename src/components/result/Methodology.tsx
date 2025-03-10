@@ -10,17 +10,25 @@ const Methodology = () => {
       </h3>
       
       <p className="text-muted-foreground mb-4">
-        Nuestro algoritmo avanzado analiza tu documento en tiempo real comparándolo con millones de fuentes en internet:
+        Nuestro algoritmo avanzado analiza tu documento en tiempo real comparándolo con múltiples fuentes usando diversas APIs:
       </p>
       
       <ol className="space-y-3 list-decimal list-inside text-muted-foreground">
         <li>Extracción de texto del documento subido</li>
         <li>División del contenido en segmentos analizables</li>
-        <li>Búsqueda en tiempo real en motores de búsqueda especializados</li>
-        <li>Comparación de coincidencias textuales con fuentes indexadas</li>
-        <li>Verificación avanzada de similitud semántica</li>
-        <li>Cálculo de porcentaje de originalidad</li>
+        <li>Búsqueda en tiempo real con Google Custom Search API</li>
+        <li>Análisis semántico con DeepSeek-R1 API</li>
+        <li>Verificación cruzada con OpenAI API</li>
+        <li>Combinación de resultados de múltiples motores</li>
+        <li>Cálculo de porcentaje de originalidad utilizando datos consolidados</li>
       </ol>
+      
+      <div className="mt-4 p-3 bg-primary/10 rounded-lg">
+        <p className="text-sm text-muted-foreground">
+          Este enfoque multi-API garantiza una mayor precisión al contrastar el contenido con diversas fuentes de 
+          búsqueda, bases de conocimiento y modelos de lenguaje, reduciendo falsos positivos y negativos.
+        </p>
+      </div>
     </div>
   );
 };

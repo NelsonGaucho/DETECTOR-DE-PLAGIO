@@ -18,12 +18,12 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-semibold flex items-center">
           <LinkIcon className="mr-2 h-5 w-5 text-primary" />
-          Fuentes detectadas en internet
+          Fuentes detectadas con múltiples APIs
         </h3>
         
         <div className="flex items-center text-xs text-muted-foreground">
           <Globe className="h-3 w-3 mr-1" />
-          <span>Búsqueda con Google API</span>
+          <span>Google + DeepSeek-R1 + OpenAI</span>
         </div>
       </div>
       
@@ -33,7 +33,7 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
             <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-500 mr-2 mt-0.5" />
             <div>
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                Para obtener fuentes reales se necesita configurar la API de Google Custom Search.
+                Para obtener fuentes reales se necesita configurar las APIs de Google, DeepSeek-R1 y OpenAI.
                 Actualmente se muestran resultados basados en patrones de coincidencia simulados.
               </p>
             </div>
@@ -54,17 +54,24 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
               <div className="mb-2">
                 <Progress value={source.matchPercentage} className="h-1" />
               </div>
-              <a
-                href={source.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary text-sm flex items-center hover:underline"
-              >
-                {source.url.length > 50
-                  ? `${source.url.substring(0, 50)}...`
-                  : source.url}
-                <ExternalLink className="ml-1 h-3 w-3" />
-              </a>
+              <div className="flex flex-col space-y-2">
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary text-sm flex items-center hover:underline"
+                >
+                  {source.url.length > 50
+                    ? `${source.url.substring(0, 50)}...`
+                    : source.url}
+                  <ExternalLink className="ml-1 h-3 w-3" />
+                </a>
+                {source.source && (
+                  <span className="text-xs text-muted-foreground flex items-center">
+                    <span className="bg-secondary/70 px-2 py-0.5 rounded-full">{source.source}</span>
+                  </span>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -72,7 +79,7 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
         <div className="flex flex-col items-center justify-center py-8">
           <Search className="h-12 w-12 text-muted-foreground mb-4" />
           <p className="text-muted-foreground text-center">
-            No se detectaron fuentes con coincidencias significativas en la web.
+            No se detectaron fuentes con coincidencias significativas en ninguna de las APIs.
           </p>
         </div>
       )}
