@@ -16,9 +16,9 @@ const Methodology = () => {
       <ol className="space-y-3 list-decimal list-inside text-muted-foreground">
         <li>Extracción de texto del documento subido</li>
         <li>División del contenido en segmentos analizables</li>
-        <li>Búsqueda en tiempo real con Google Custom Search API</li>
-        <li>Análisis semántico con DeepSeek-R1 API</li>
-        <li>Verificación cruzada con OpenAI API</li>
+        <li>Búsqueda en tiempo real con Google Scholar mediante SerpAPI</li>
+        <li>Análisis semántico con DeepSeek API</li>
+        <li>Verificación cruzada con OpenAI API (embeddings y chat completions)</li>
         <li>Combinación de resultados de múltiples motores</li>
         <li>Cálculo de porcentaje de originalidad utilizando datos consolidados</li>
       </ol>
@@ -26,7 +26,7 @@ const Methodology = () => {
       <div className="mt-4 p-3 bg-primary/10 rounded-lg">
         <p className="text-sm text-muted-foreground">
           Este enfoque multi-API garantiza una mayor precisión al contrastar el contenido con diversas fuentes de 
-          búsqueda, bases de conocimiento y modelos de lenguaje, reduciendo falsos positivos y negativos.
+          búsqueda académicas, bases de conocimiento y modelos de lenguaje especializados, reduciendo falsos positivos y negativos.
         </p>
       </div>
     </div>

@@ -19,3 +19,26 @@ export interface AnalyzedContent {
   text: string;
   isPlagiarized: boolean;
 }
+
+// New types for API responses
+export interface OpenAIEmbeddingResponse {
+  data: {
+    embedding: number[];
+  }[];
+}
+
+export interface DeepSeekSearchResponse {
+  results: {
+    url: string;
+    title?: string;
+    snippet?: string;
+  }[];
+}
+
+export interface GoogleSearchResponse {
+  items?: {
+    link: string;
+    title: string;
+    snippet?: string;
+  }[];
+}
