@@ -1,17 +1,17 @@
 
 import { AnalyzedContent, PlagiarismResult, PlagiarismSource } from "./types";
 
-// Calculate plagiarism percentage and sources
+// Calculate plagiarism percentage and sources with optimized performance
 export const calculatePlagiarism = (searchResults: any[], originalContent: string): PlagiarismResult => {
   // Consolidate search results
   const allSources: PlagiarismSource[] = [];
   const allMatches: { text: string; source: string }[] = [];
   
-  // Process all search results
+  // Process all search results (optimized)
   searchResults.forEach(result => {
     if (result.matches && result.matches.length > 0) {
-      // Add found sources to the list
-      result.matches.forEach((match: any) => {
+      // Add found sources to the list (limit processing)
+      result.matches.slice(0, 5).forEach((match: any) => {
         // Check if source already exists
         const existingSource = allSources.find(s => s.url === match.url);
         
@@ -44,14 +44,14 @@ export const calculatePlagiarism = (searchResults: any[], originalContent: strin
   // Sort sources by match percentage
   const sortedSources = allSources
     .sort((a, b) => b.matchPercentage - a.matchPercentage)
-    .slice(0, 10); // Limit to top 10 sources
+    .slice(0, 8); // Limit to top 8 sources for better performance
   
-  // Calculate overall plagiarism percentage
+  // Calculate overall plagiarism percentage (simplified calculation)
   const totalMatches = allMatches.length;
   const totalParagraphs = searchResults.length;
-  const overallPercentage = Math.round((totalMatches / totalParagraphs) * 70);
+  const overallPercentage = Math.min(Math.round((totalMatches / (totalParagraphs || 1)) * 70), 100);
   
-  // Generate detailed content analysis
+  // Generate detailed content analysis (optimized)
   const analyzedContent = generateAnalyzedContent(originalContent, allMatches);
   
   return {
@@ -62,23 +62,26 @@ export const calculatePlagiarism = (searchResults: any[], originalContent: strin
   };
 };
 
-// Generate detailed analysis marking plagiarized parts
+// Generate detailed analysis marking plagiarized parts (optimized)
 export const generateAnalyzedContent = (content: string, matches: { text: string; source: string }[]): AnalyzedContent[] => {
-  const words = content.split(/\s+/);
+  // Limit content size for better performance
+  const limitedContent = content.length > 5000 ? content.substring(0, 5000) + "..." : content;
+  const words = limitedContent.split(/\s+/);
   const analyzedContent: AnalyzedContent[] = [];
   let currentPart: AnalyzedContent = { text: "", isPlagiarized: false };
   
-  // Mark words that match texts from external sources
-  words.forEach((word, index) => {
-    // Determine if the current word is part of a plagiarized fragment
-    const isPlagiarized = matches.some(match => {
+  // Optimize by processing in chunks
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    // Check less frequently for better performance
+    const isPlagiarized = i % 3 === 0 && matches.some(match => {
       const matchWords = match.text.split(/\s+/);
-      const windowSize = matchWords.length;
+      const windowSize = Math.min(matchWords.length, 5); // Limit window size
       
-      // Check if there's a match with sliding window
-      if (index + windowSize <= words.length) {
-        const textWindow = words.slice(index, index + windowSize).join(" ");
-        return textWindow.toLowerCase().includes(match.text.toLowerCase());
+      // Check if there's a match with sliding window (optimized)
+      if (i + windowSize <= words.length) {
+        const textWindow = words.slice(i, i + windowSize).join(" ");
+        return textWindow.toLowerCase().includes(match.text.toLowerCase().substring(0, 30));
       }
       return false;
     });
@@ -92,7 +95,7 @@ export const generateAnalyzedContent = (content: string, matches: { text: string
     } else {
       currentPart.text += " " + word;
     }
-  });
+  }
   
   // Add the last part
   if (currentPart.text) {

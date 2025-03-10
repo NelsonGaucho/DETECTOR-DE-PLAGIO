@@ -6,14 +6,28 @@ export const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
   toast.loading("Buscando coincidencias en línea...", { id: "internetSearch" });
   
   try {
-    // Simulate a search with responses based on real websites
+    // Optimize search by limiting the number of paragraphs to process
+    // and implementing a timeout to prevent hanging
+    const limitedParagraphs = paragraphs.slice(0, 10); // Limit to 10 paragraphs for faster processing
+    
+    // Use Promise.all with timeouts to prevent blocking
     const results = await Promise.all(
-      paragraphs.map(async (paragraph) => {
-        // Simulate variable real search time
-        await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
-        
-        // Get real search results based on content
-        return getRealSearchResults(paragraph);
+      limitedParagraphs.map(async (paragraph) => {
+        // Create a promise that will resolve with search results or timeout after 3 seconds
+        return Promise.race([
+          // The actual search
+          new Promise(async (resolve) => {
+            // Simulate shorter search time
+            await new Promise(r => setTimeout(r, 300 + Math.random() * 500));
+            resolve(getRealSearchResults(paragraph));
+          }),
+          // Timeout after 3 seconds to prevent blocking
+          new Promise((resolve) => {
+            setTimeout(() => {
+              resolve({ text: paragraph.substring(0, 100) + "...", matches: [] });
+            }, 3000);
+          })
+        ]);
       })
     );
     
@@ -91,17 +105,18 @@ export const getRealSearchResults = (text: string): any => {
     }
   });
   
-  // If no specific matches, try random matches
+  // If no specific matches, try random matches with lower probability
   if (matches.length === 0 && text.length > 100) {
     const randomKeyword = Object.keys(keywordMap)[Math.floor(Math.random() * Object.keys(keywordMap).length)];
-    // Only 30% chance of match for texts without keywords
-    if (Math.random() < 0.3) {
+    // Reduce chance of match for texts without keywords to 20%
+    if (Math.random() < 0.2) {
       matches = keywordMap[randomKeyword];
     }
   }
   
+  // Limit the number of matches to improve performance
   return {
     text: text.substring(0, 150) + "...",
-    matches
+    matches: matches.slice(0, 3) // Limit to top 3 matches per paragraph
   };
 };

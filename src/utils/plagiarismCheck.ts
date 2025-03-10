@@ -10,10 +10,16 @@ import { PlagiarismResult, PlagiarismSource, AnalyzedContent } from "./plagiaris
 // Re-export types for backward compatibility
 export type { PlagiarismResult, PlagiarismSource, AnalyzedContent };
 
-// Main function to check plagiarism using Internet search
+// Main function to check plagiarism using Internet search (optimized)
 export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => {
   return new Promise((resolve, reject) => {
     try {
+      // Set a timeout to avoid blocking indefinitely
+      const timeout = setTimeout(() => {
+        toast.error("La operación ha tardado demasiado. Intente con un archivo más pequeño.");
+        reject(new Error("Operation timed out"));
+      }, 15000); // 15 seconds timeout
+      
       // Extract text from the file (PDF or DOCX)
       extractTextFromFile(file)
         .then(async (fileContent) => {
@@ -27,15 +33,20 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
             // Calculate plagiarism percentage based on results
             const plagiarismData = calculatePlagiarism(results, fileContent);
             
+            // Clear timeout as operation completed successfully
+            clearTimeout(timeout);
+            
             // Return complete result
             resolve(plagiarismData);
           } catch (error) {
+            clearTimeout(timeout);
             console.error("Error processing content:", error);
             toast.error("Error al analizar el documento");
             reject(error);
           }
         })
         .catch(error => {
+          clearTimeout(timeout);
           reject(error);
         });
     } catch (error) {
