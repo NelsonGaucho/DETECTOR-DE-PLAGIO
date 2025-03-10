@@ -5,18 +5,18 @@ import { toast } from "sonner";
 
 export interface PlagiarismResult {
   percentage: number;
-  sources: Source[];
+  sources: PlagiarismSource[];
   documentContent: string;
-  analyzedContent: AnalyzedPart[];
+  analyzedContent: AnalyzedContent[];
 }
 
-export interface Source {
+export interface PlagiarismSource {
   url: string;
   title: string;
   matchPercentage: number;
 }
 
-export interface AnalyzedPart {
+export interface AnalyzedContent {
   text: string;
   isPlagiarized: boolean;
 }

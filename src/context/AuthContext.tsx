@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import bcrypt from "bcryptjs";
 import { toast } from "sonner";
 
-interface User {
+export interface User {
   email: string;
   credits: number;
   isPremium: boolean;
