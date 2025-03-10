@@ -1,13 +1,13 @@
 
 import { toast } from "sonner";
 
-// Busca coincidencias reales en internet utilizando API de búsqueda
+// Busca coincidencias reales en internet utilizando API de búsqueda Google
 export const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
-  toast.loading("Buscando coincidencias en línea en fuentes reales...", { id: "internetSearch" });
+  toast.loading("Buscando coincidencias en línea en fuentes reales de Google...", { id: "internetSearch" });
   
   try {
     // Optimizamos limitando el número de párrafos a procesar
-    const limitedParagraphs = paragraphs.slice(0, 10); // Máximo 10 párrafos
+    const limitedParagraphs = paragraphs.slice(0, 5); // Máximo 5 párrafos para evitar sobrecargar la API
     
     // Usamos Promise.all con timeouts para evitar bloqueos
     const results = await Promise.all(
@@ -16,53 +16,58 @@ export const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
           // La búsqueda real
           new Promise(async (resolve) => {
             try {
-              // Realizar búsqueda real utilizando Bing Search API
-              const searchResults = await performRealSearch(paragraph);
+              // Realizar búsqueda real utilizando Google Search API
+              const searchResults = await performGoogleSearch(paragraph);
               resolve(searchResults);
             } catch (error) {
               console.error("Error en búsqueda:", error);
               resolve({ text: paragraph.substring(0, 100) + "...", matches: [] });
             }
           }),
-          // Timeout después de 5 segundos para evitar bloqueos
+          // Timeout después de 10 segundos para evitar bloqueos
           new Promise((resolve) => {
             setTimeout(() => {
               resolve({ text: paragraph.substring(0, 100) + "...", matches: [] });
-            }, 5000);
+            }, 10000);
           })
         ]);
       })
     );
     
-    toast.success("Búsqueda en fuentes reales completada", { id: "internetSearch" });
+    toast.success("Búsqueda en fuentes reales de Google completada", { id: "internetSearch" });
     return results;
   } catch (error) {
-    toast.error("Error en la búsqueda en línea", { id: "internetSearch" });
+    toast.error("Error en la búsqueda en línea con Google", { id: "internetSearch" });
     console.error("Error in search:", error);
     return [];
   }
 };
 
-// Realiza una búsqueda real usando Bing Search API
-const performRealSearch = async (text: string): Promise<any> => {
+// Realiza una búsqueda real usando Google Custom Search API
+const performGoogleSearch = async (text: string): Promise<any> => {
   if (!text || text.length < 20) return { text, matches: [] };
   
   try {
     // Preparamos los términos de búsqueda (eliminando caracteres especiales)
     const searchQuery = text
-      .substring(0, 200)  // Limitar a 200 caracteres
+      .substring(0, 150)  // Limitar a 150 caracteres para optimizar
       .replace(/[^\w\s]/g, ' ')
       .trim();
     
-    // URL para la API de Bing Search
-    const searchUrl = `https://api.bing.microsoft.com/v7.0/search?q=${encodeURIComponent(searchQuery)}&count=5`;
+    // Comprobamos si tenemos las claves de API configuradas
+    const apiKey = "{{GOOGLE_API_KEY}}"; // Reemplazar por la clave real
+    const searchEngineId = "{{GOOGLE_SEARCH_ENGINE_ID}}"; // Reemplazar por el ID real
     
-    // Hacemos la petición a la API de Bing
-    const response = await fetch(searchUrl, {
-      headers: {
-        'Ocp-Apim-Subscription-Key': '{{BING_API_KEY}}', // Aquí se necesita una clave de API real
-      }
-    });
+    // Verificamos si las claves de API están configuradas
+    if (apiKey.includes("{{") || searchEngineId.includes("{{")) {
+      return getFallbackResults(text);
+    }
+    
+    // URL para la API de Google Custom Search
+    const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(searchQuery)}`;
+    
+    // Hacemos la petición a la API de Google
+    const response = await fetch(searchUrl);
     
     if (!response.ok) {
       throw new Error(`Error de búsqueda: ${response.status}`);
@@ -71,11 +76,11 @@ const performRealSearch = async (text: string): Promise<any> => {
     const data = await response.json();
     
     // Procesamos los resultados
-    const matches = data.webPages?.value.map((page: any) => ({
-      url: page.url,
-      title: page.name,
-      similarity: calculateSimilarity(text, page.snippet),
-      text: page.snippet
+    const matches = data.items?.map((item: any) => ({
+      url: item.link,
+      title: item.title,
+      similarity: calculateSimilarity(text, item.snippet || ""),
+      text: item.snippet || ""
     })) || [];
     
     return {
@@ -83,10 +88,9 @@ const performRealSearch = async (text: string): Promise<any> => {
       matches: matches.filter((match: any) => match.similarity > 30) // Solo coincidencias con más del 30%
     };
   } catch (error) {
-    console.error("Error en búsqueda real:", error);
+    console.error("Error en búsqueda con Google:", error);
     
     // Si hay un error, usamos el sistema de respaldo con datos simulados
-    // pero solo para algunos términos clave para mantener la funcionalidad
     return getFallbackResults(text);
   }
 };

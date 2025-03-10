@@ -1,5 +1,5 @@
 
-import { ExternalLink, LinkIcon, Search, AlertTriangle } from "lucide-react";
+import { ExternalLink, LinkIcon, Search, AlertTriangle, Globe } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { PlagiarismSource } from "@/utils/plagiarismCheck";
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,8 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
         </h3>
         
         <div className="flex items-center text-xs text-muted-foreground">
-          <Search className="h-3 w-3 mr-1" />
-          <span>Búsqueda en fuentes reales</span>
+          <Globe className="h-3 w-3 mr-1" />
+          <span>Búsqueda con Google API</span>
         </div>
       </div>
       
@@ -33,7 +33,7 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
             <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-500 mr-2 mt-0.5" />
             <div>
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                Para obtener fuentes reales se necesita configurar una API de búsqueda (Google o Bing).
+                Para obtener fuentes reales se necesita configurar la API de Google Custom Search.
                 Actualmente se muestran resultados basados en patrones de coincidencia simulados.
               </p>
             </div>
