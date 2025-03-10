@@ -1,4 +1,3 @@
-
 // Utilidad para detección de plagio mediante búsqueda en internet real
 
 import { toast } from "sonner";
@@ -129,7 +128,7 @@ const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
 // Cálculo de porcentaje de plagio y fuentes
 const calculatePlagiarism = (searchResults: any[], originalContent: string): PlagiarismResult => {
   // Consolidar resultados de búsqueda
-  const allSources: Source[] = [];
+  const allSources: PlagiarismSource[] = [];
   const allMatches: { text: string; source: string }[] = [];
   
   // Procesar todos los resultados de búsqueda
@@ -188,10 +187,10 @@ const calculatePlagiarism = (searchResults: any[], originalContent: string): Pla
 };
 
 // Generar análisis detallado marcando partes plagiadas
-const generateAnalyzedContent = (content: string, matches: { text: string; source: string }[]): AnalyzedPart[] => {
+const generateAnalyzedContent = (content: string, matches: { text: string; source: string }[]): AnalyzedContent[] => {
   const words = content.split(/\s+/);
-  const analyzedContent: AnalyzedPart[] = [];
-  let currentPart: AnalyzedPart = { text: "", isPlagiarized: false };
+  const analyzedContent: AnalyzedContent[] = [];
+  let currentPart: AnalyzedContent = { text: "", isPlagiarized: false };
   
   // Marcar palabras que coinciden con textos de fuentes externas
   words.forEach((word, index) => {
