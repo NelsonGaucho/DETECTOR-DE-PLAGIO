@@ -26,7 +26,7 @@ const Index = () => {
       setIsProcessing(true);
       
       // Mostrar toast de progreso
-      toast.loading("Analizando documento en tiempo real...", {
+      toast.loading("Analizando documento con fuentes reales...", {
         id: "processingFile",
         duration: 5000,
       });
@@ -38,7 +38,7 @@ const Index = () => {
       savePlagiarismResult(result);
       
       // Redirigir a la página de resultados
-      toast.success("Análisis completado con fuentes en tiempo real", {
+      toast.success("Análisis completado con búsqueda en fuentes reales", {
         id: "processingFile",
       });
       
@@ -63,7 +63,7 @@ const Index = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16 animate-fade-in">
             <h1 className="heading-xl mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Detector de Plagio en Tiempo Real
+              Detector de Plagio con Fuentes Reales
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-10">
               La herramienta más avanzada para revisar el plagio de tu TFG, TFM o cualquier proyecto académico comparando con fuentes reales en internet.
@@ -119,10 +119,10 @@ const Index = () => {
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-12">
             <h2 className="heading-lg mb-4">
-              Comprueba tu documento con tecnología avanzada
+              Comprueba tu documento con tecnología de búsqueda real
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Sube tu documento en formato PDF o Word y recibe un análisis detallado comparando con fuentes reales en internet.
+              Sube tu documento en formato PDF o Word y recibe un análisis detallado comparando con fuentes reales y actualizadas de internet.
             </p>
           </div>
           

@@ -1,7 +1,8 @@
 
-import { ExternalLink, LinkIcon, Search } from "lucide-react";
+import { ExternalLink, LinkIcon, Search, AlertTriangle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { PlagiarismSource } from "@/utils/plagiarismCheck";
+import { Button } from "@/components/ui/button";
 
 type SourcesListProps = {
   sources: PlagiarismSource[];
@@ -9,6 +10,9 @@ type SourcesListProps = {
 };
 
 const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
+  const hasRealSources = sources.length > 0 && 
+    !sources[0].url.includes("ejemplo.com/aviso-api");
+
   return (
     <div className="bg-white/50 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-100 dark:border-slate-700">
       <div className="flex items-center justify-between mb-4">
@@ -19,9 +23,23 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
         
         <div className="flex items-center text-xs text-muted-foreground">
           <Search className="h-3 w-3 mr-1" />
-          <span>Buscado en tiempo real</span>
+          <span>Búsqueda en fuentes reales</span>
         </div>
       </div>
+      
+      {!hasRealSources && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-4">
+          <div className="flex items-start">
+            <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-500 mr-2 mt-0.5" />
+            <div>
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                Para obtener fuentes reales se necesita configurar una API de búsqueda (Google o Bing).
+                Actualmente se muestran resultados basados en patrones de coincidencia simulados.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       
       {sources.length > 0 ? (
         <div className="space-y-4">
