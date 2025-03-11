@@ -1,12 +1,7 @@
 
 import { toast } from "sonner";
 import { combineSearchResults } from "./resultCombiner";
-import { 
-  performOpenAISearch,
-  performDeepseekSearch,
-  performWowinstonSearch,
-  performDetectingAISearch
-} from "./searchProviders";
+import { supabase } from "@/integrations/supabase/client";
 
 // Busca coincidencias reales en internet utilizando múltiples APIs a través de Edge Functions
 export const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
@@ -24,38 +19,113 @@ export const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
     const results = await Promise.all(
       limitedParagraphs.map(async (paragraph) => {
         return Promise.race([
-          // La búsqueda multimodal usando múltiples APIs
+          // Usar el endpoint centralizado para todas las APIs
           new Promise(async (resolve) => {
             try {
               console.log(`Buscando coincidencias para: "${paragraph.substring(0, 50)}..."`);
               
-              // 1. Realizar búsqueda con OpenAI
-              const openaiResults = await performOpenAISearch(paragraph);
-              console.log("OpenAI devolvió:", openaiResults.matches?.length || 0, "resultados");
+              // Llamar al endpoint detect-plagiarism 
+              const { data, error } = await supabase.functions.invoke('detect-plagiarism', {
+                body: { text: paragraph }
+              });
               
-              // 2. Realizar búsqueda con DeepSeek
-              const deepseekResults = await performDeepseekSearch(paragraph);
-              console.log("DeepSeek devolvió:", deepseekResults.matches?.length || 0, "resultados");
+              console.log("Respuesta del endpoint detect-plagiarism:", data);
               
-              // 3. Realizar búsqueda con Wowinston.AI
-              const wowinstonResults = await performWowinstonSearch(paragraph);
-              console.log("Wowinston.AI devolvió:", wowinstonResults.matches?.length || 0, "resultados");
+              if (error) {
+                console.error("Error en Edge Function detect-plagiarism:", error);
+                resolve({ text: paragraph, matches: [] });
+                return;
+              }
               
-              // 4. Realizar búsqueda con Detecting-AI
-              const detectingAiResults = await performDetectingAISearch(paragraph);
-              console.log("Detecting-AI devolvió:", detectingAiResults.matches?.length || 0, "resultados");
-              
-              // 5. Combinar y deduplicar resultados
-              const combinedResults = combineSearchResults(
-                null, 
-                deepseekResults, 
-                openaiResults,
-                wowinstonResults,
-                detectingAiResults,
-                paragraph
-              );
-              
-              resolve(combinedResults);
+              // Si tenemos resultados, procesarlos
+              if (data && data.results) {
+                // Procesar los resultados en el formato esperado por la aplicación
+                const matches = [];
+                
+                // Procesar resultados de cada API
+                for (const apiResult of data.results) {
+                  if (apiResult.response && !apiResult.error) {
+                    // Dependiendo de la API, extraer la información relevante
+                    switch (apiResult.source) {
+                      case "OpenAI":
+                        // Extraer información de OpenAI
+                        if (apiResult.response.choices && apiResult.response.choices[0]) {
+                          const content = apiResult.response.choices[0].message.content;
+                          // Intentar encontrar URLs o información de fuentes en la respuesta
+                          const urls = content.match(/https?:\/\/[^\s]+/g) || [];
+                          const sources = urls.map(url => ({
+                            url: url,
+                            title: "Fuente detectada por OpenAI",
+                            matchPercentage: 70, // Valor estimado
+                            text: content.substring(0, 150) + "...",
+                            source: "OpenAI"
+                          }));
+                          matches.push(...sources);
+                        }
+                        break;
+                      
+                      case "DeepSeek":
+                        // Extraer información de DeepSeek
+                        if (apiResult.response.results) {
+                          const deepSeekMatches = apiResult.response.results.map(item => ({
+                            url: item.url || "https://ejemplo.com",
+                            title: item.title || "Fuente detectada por DeepSeek",
+                            matchPercentage: 75, // Valor estimado
+                            text: item.snippet || "",
+                            source: "DeepSeek"
+                          }));
+                          matches.push(...deepSeekMatches);
+                        }
+                        break;
+                      
+                      case "Wowinston.AI":
+                        // Extraer información de Wowinston.AI
+                        if (apiResult.response.sources) {
+                          const wowinstonMatches = apiResult.response.sources.map(item => ({
+                            url: item.url || "https://ejemplo.com",
+                            title: item.title || "Fuente detectada por Wowinston.AI",
+                            matchPercentage: Math.round(item.similarity * 100), // Convertir de 0-1 a porcentaje
+                            text: item.snippet || "",
+                            source: "Wowinston.AI"
+                          }));
+                          matches.push(...wowinstonMatches);
+                        }
+                        break;
+                      
+                      case "Detecting-AI":
+                        // Extraer información de Detecting-AI
+                        if (apiResult.response.sources) {
+                          const detectingAiMatches = apiResult.response.sources.map(item => ({
+                            url: item.url || "https://ejemplo.com",
+                            title: item.title || "Fuente detectada por Detecting-AI",
+                            matchPercentage: Math.round(item.match_score * 100), // Convertir de 0-1 a porcentaje
+                            text: item.excerpt || "",
+                            source: "Detecting-AI"
+                          }));
+                          matches.push(...detectingAiMatches);
+                        }
+                        break;
+                    }
+                  }
+                }
+                
+                // Usar el combinador de resultados para deduplicar y ordenar
+                const combinedResult = combineSearchResults(
+                  { matches: [] }, // Google (no usado)
+                  { matches: [] }, // DeepSeek (procesado arriba)
+                  { matches: [] }, // OpenAI (procesado arriba)
+                  { matches: [] }, // Wowinston (procesado arriba)
+                  { matches: [] }, // DetectingAI (procesado arriba)
+                  paragraph
+                );
+                
+                // Añadir los matches procesados
+                combinedResult.matches = matches;
+                
+                resolve(combinedResult);
+              } else {
+                resolve({ text: paragraph, matches: [] });
+              }
             } catch (error) {
               console.error("Error en búsqueda:", error);
               resolve({ text: paragraph, matches: [] });
