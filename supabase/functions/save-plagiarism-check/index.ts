@@ -25,14 +25,32 @@ serve(async (req) => {
     // Crear el cliente con la clave de servicio para operaciones admin
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Extraer token de autorización si existe
+    const authHeader = req.headers.get('Authorization');
+    let userId = null;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      
+      // Verificar el token y obtener el userId
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      
+      if (user && !userError) {
+        userId = user.id;
+      }
+    }
+
     // Obtener datos del análisis
     const { 
       documentName, 
       documentContent, 
       plagiarismPercentage, 
       sources,
-      userId  // Opcional, puede ser null
+      requestUserId  // El userId enviado desde el cliente como respaldo
     } = await req.json();
+
+    // Usar el userId del token si existe, de lo contrario usar el proporcionado en la petición
+    const finalUserId = userId || requestUserId;
 
     // Validar datos esenciales
     if (!documentName || typeof plagiarismPercentage !== 'number') {
@@ -56,7 +74,7 @@ serve(async (req) => {
         document_content: limitedContent,
         plagiarism_percentage: plagiarismPercentage,
         sources: sources || [],
-        user_id: userId
+        user_id: finalUserId
       })
       .select()
       .single();

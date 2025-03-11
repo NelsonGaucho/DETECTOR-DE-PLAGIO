@@ -38,6 +38,10 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
             // Clear timeout as operation completed successfully
             clearTimeout(timeout);
             
+            // Obtener el token de autenticación si el usuario está autenticado
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            
             // Guardar los resultados en la base de datos
             try {
               const { error } = await supabase.functions.invoke('save-plagiarism-check', {
@@ -46,9 +50,10 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
                   documentContent: fileContent.substring(0, 10000), // Limitar tamaño
                   plagiarismPercentage: plagiarismData.percentage,
                   sources: plagiarismData.sources,
-                  // Obtener userId del contexto de autenticación si está disponible
-                  userId: null // Se actualizará si el usuario está autenticado
-                }
+                  // Enviar userId desde el cliente como respaldo
+                  requestUserId: session?.user?.id || null
+                },
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined
               });
               
               if (error) {
