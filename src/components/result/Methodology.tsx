@@ -19,6 +19,8 @@ const Methodology = () => {
         <li>Búsqueda en tiempo real mediante Edge Functions de Supabase</li>
         <li>Análisis avanzado con DeepSeek API</li>
         <li>Verificación semántica con OpenAI API</li>
+        <li>Detección de fuentes con Wowinston.AI</li>
+        <li>Análisis académico con Detecting-AI</li>
         <li>Consolidación de resultados de múltiples motores</li>
         <li>Almacenamiento seguro de análisis en base de datos</li>
         <li>Cálculo de porcentaje de originalidad utilizando datos consolidados</li>
@@ -28,7 +30,7 @@ const Methodology = () => {
         <p className="text-sm text-muted-foreground flex items-start">
           <Globe className="h-4 w-4 text-primary mr-2 mt-0.5 flex-shrink-0" />
           <span>
-            Este enfoque multi-API garantiza una mayor precisión al contrastar el contenido con diversas 
+            Este enfoque multi-API (DeepSeek, OpenAI, Wowinston.AI y Detecting-AI) garantiza una mayor precisión al contrastar el contenido con diversas 
             fuentes académicas, modelos de lenguaje especializados y bases de conocimiento, 
             todo procesado de forma segura mediante Edge Functions.
           </span>

@@ -16,6 +16,8 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
   const googleSources = sources.filter(s => s.source?.includes("Google"));
   const deepseekSources = sources.filter(s => s.source?.includes("DeepSeek"));
   const openaiSources = sources.filter(s => s.source?.includes("OpenAI"));
+  const wowinstonSources = sources.filter(s => s.source?.includes("Wowinston"));
+  const detectingAiSources = sources.filter(s => s.source?.includes("Detecting-AI"));
   const otherSources = sources.filter(s => !s.source);
 
   return (
@@ -28,7 +30,7 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
         
         <div className="flex items-center text-xs text-muted-foreground">
           <Globe className="h-3 w-3 mr-1" />
-          <span>Google Scholar + DeepSeek + OpenAI</span>
+          <span>4 APIs de detección de plagio</span>
         </div>
       </div>
       
@@ -38,7 +40,7 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
             <Globe className="h-5 w-5 text-green-600 dark:text-green-500 mr-2 mt-0.5" />
             <div>
               <p className="text-sm text-green-800 dark:text-green-200">
-                Utilizando APIs reales: Google Scholar (SerpAPI), DeepSeek y OpenAI para búsquedas en vivo.
+                Utilizando APIs reales: DeepSeek, OpenAI, Wowinston.AI y Detecting-AI para búsquedas en vivo.
               </p>
             </div>
           </div>
@@ -78,6 +80,30 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
               <div className="space-y-3">
                 {openaiSources.map((source, index) => (
                   <SourceCard key={`openai-${index}`} source={source} getColorClass={getColorClass} />
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Wowinston.AI sources */}
+          {wowinstonSources.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold mb-2 text-orange-600 dark:text-orange-400">Fuentes de Wowinston.AI</h4>
+              <div className="space-y-3">
+                {wowinstonSources.map((source, index) => (
+                  <SourceCard key={`wowinston-${index}`} source={source} getColorClass={getColorClass} />
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Detecting-AI sources */}
+          {detectingAiSources.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold mb-2 text-pink-600 dark:text-pink-400">Fuentes de Detecting-AI</h4>
+              <div className="space-y-3">
+                {detectingAiSources.map((source, index) => (
+                  <SourceCard key={`detectingai-${index}`} source={source} getColorClass={getColorClass} />
                 ))}
               </div>
             </div>

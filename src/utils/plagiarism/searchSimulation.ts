@@ -1,10 +1,11 @@
+
 import { toast } from "sonner";
 import { DeepSeekSearchResponse, GoogleSearchResponse, OpenAIEmbeddingResponse } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 
 // Busca coincidencias reales en internet utilizando múltiples APIs a través de Edge Functions
 export const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
-  toast.loading("Buscando coincidencias usando múltiples motores de búsqueda (Google, DeepSeek-R1, OpenAI)...", { id: "internetSearch" });
+  toast.loading("Buscando coincidencias usando múltiples motores de búsqueda...", { id: "internetSearch" });
   
   try {
     // Optimizamos limitando el número de párrafos a procesar
@@ -14,17 +15,30 @@ export const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
     const results = await Promise.all(
       limitedParagraphs.map(async (paragraph) => {
         return Promise.race([
-          // La búsqueda multimodal usando las tres APIs
+          // La búsqueda multimodal usando múltiples APIs
           new Promise(async (resolve) => {
             try {
-              // 1. Realizar búsqueda con OpenAI a través de Edge Function
+              // 1. Realizar búsqueda con OpenAI
               const openaiResults = await performOpenAISearch(paragraph);
               
-              // 2. Realizar búsqueda con DeepSeek a través de Edge Function
+              // 2. Realizar búsqueda con DeepSeek
               const deepseekResults = await performDeepseekSearch(paragraph);
               
-              // 3. Combinar y deduplicar resultados
-              const combinedResults = combineSearchResults(null, deepseekResults, openaiResults, paragraph);
+              // 3. Realizar búsqueda con Wowinston.AI
+              const wowinstonResults = await performWowinstonSearch(paragraph);
+              
+              // 4. Realizar búsqueda con Detecting-AI
+              const detectingAiResults = await performDetectingAISearch(paragraph);
+              
+              // 5. Combinar y deduplicar resultados
+              const combinedResults = combineSearchResults(
+                null, 
+                deepseekResults, 
+                openaiResults,
+                wowinstonResults,
+                detectingAiResults,
+                paragraph
+              );
               
               resolve(combinedResults);
             } catch (error) {
@@ -52,12 +66,21 @@ export const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
 };
 
 // Combina y deduplica resultados de múltiples fuentes
-const combineSearchResults = (googleResults: any, deepseekResults: any, openaiResults: any, originalText: string): any => {
+const combineSearchResults = (
+  googleResults: any, 
+  deepseekResults: any, 
+  openaiResults: any,
+  wowinstonResults: any,
+  detectingAiResults: any,
+  originalText: string
+): any => {
   // Si todas las APIs fallan o no están configuradas, usar sistema de respaldo
   if (
     (!googleResults?.matches || googleResults.matches.length === 0) &&
     (!deepseekResults?.matches || deepseekResults.matches.length === 0) &&
-    (!openaiResults?.matches || openaiResults.matches.length === 0)
+    (!openaiResults?.matches || openaiResults.matches.length === 0) &&
+    (!wowinstonResults?.matches || wowinstonResults.matches.length === 0) &&
+    (!detectingAiResults?.matches || detectingAiResults.matches.length === 0)
   ) {
     return getFallbackResults(originalText);
   }
@@ -109,11 +132,47 @@ const combineSearchResults = (googleResults: any, deepseekResults: any, openaiRe
     });
   }
   
+  // Añadir resultados de Wowinston.AI (si existen)
+  if (wowinstonResults?.matches && wowinstonResults.matches.length > 0) {
+    wowinstonResults.matches.forEach((match: any) => {
+      // Verificar si ya existe la URL para evitar duplicados
+      const existingMatch = combinedMatches.find(m => m.url === match.url);
+      if (existingMatch) {
+        // Si existe, actualizar la similitud si la nueva es mayor
+        if (match.matchPercentage > existingMatch.matchPercentage) {
+          existingMatch.matchPercentage = match.matchPercentage;
+          existingMatch.source = "Wowinston.AI, " + existingMatch.source;
+        }
+      } else {
+        match.source = "Wowinston.AI";
+        combinedMatches.push(match);
+      }
+    });
+  }
+  
+  // Añadir resultados de Detecting-AI (si existen)
+  if (detectingAiResults?.matches && detectingAiResults.matches.length > 0) {
+    detectingAiResults.matches.forEach((match: any) => {
+      // Verificar si ya existe la URL para evitar duplicados
+      const existingMatch = combinedMatches.find(m => m.url === match.url);
+      if (existingMatch) {
+        // Si existe, actualizar la similitud si la nueva es mayor
+        if (match.matchPercentage > existingMatch.matchPercentage) {
+          existingMatch.matchPercentage = match.matchPercentage;
+          existingMatch.source = "Detecting-AI, " + existingMatch.source;
+        }
+      } else {
+        match.source = "Detecting-AI";
+        combinedMatches.push(match);
+      }
+    });
+  }
+  
   // Ordenar por similitud (descendente)
   combinedMatches.sort((a, b) => b.matchPercentage - a.matchPercentage);
   
-  // Limitar a las 8 coincidencias más relevantes
-  combinedMatches = combinedMatches.slice(0, 8);
+  // Limitar a las 10 coincidencias más relevantes (aumentado de 8 a 10)
+  combinedMatches = combinedMatches.slice(0, 10);
   
   return {
     text: originalText.substring(0, 150) + "...",
@@ -161,6 +220,50 @@ const performDeepseekSearch = async (text: string): Promise<any> => {
     return data;
   } catch (error) {
     console.error("Error en búsqueda con DeepSeek:", error);
+    return { matches: [] };
+  }
+};
+
+// Realiza una búsqueda usando la Edge Function de Wowinston.AI
+const performWowinstonSearch = async (text: string): Promise<any> => {
+  if (!text || text.length < 20) return { matches: [] };
+  
+  try {
+    // Utilizar la función Edge de Supabase para Wowinston.AI
+    const { data, error } = await supabase.functions.invoke('wowinston-search', {
+      body: { text }
+    });
+    
+    if (error) {
+      console.error("Error en Edge Function Wowinston:", error);
+      return { matches: [] };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Error en búsqueda con Wowinston:", error);
+    return { matches: [] };
+  }
+};
+
+// Realiza una búsqueda usando la Edge Function de Detecting-AI
+const performDetectingAISearch = async (text: string): Promise<any> => {
+  if (!text || text.length < 20) return { matches: [] };
+  
+  try {
+    // Utilizar la función Edge de Supabase para Detecting-AI
+    const { data, error } = await supabase.functions.invoke('detectingai-search', {
+      body: { text }
+    });
+    
+    if (error) {
+      console.error("Error en Edge Function Detecting-AI:", error);
+      return { matches: [] };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Error en búsqueda con Detecting-AI:", error);
     return { matches: [] };
   }
 };
