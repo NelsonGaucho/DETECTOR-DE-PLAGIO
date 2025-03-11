@@ -36,6 +36,21 @@ export const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
                 return;
               }
               
+              // Verificar si hay errores específicos de Detecting-AI
+              const detectingAiResult = data?.results?.find((r: any) => r.source === "Detecting-AI");
+              
+              if (detectingAiResult?.error) {
+                console.error("Error específico de Detecting-AI:", detectingAiResult.error);
+                console.log("Respuesta cruda de Detecting-AI:", detectingAiResult.rawResponse);
+                
+                // Si es un error HTML, mostramos una alerta más específica
+                if (detectingAiResult.isHtmlResponse) {
+                  toast.error("La API de Detecting-AI devolvió HTML en lugar de JSON. Posible error de configuración.", { 
+                    duration: 5000 
+                  });
+                }
+              }
+              
               // Devolver la respuesta sin procesar
               resolve({ 
                 text: paragraph, 

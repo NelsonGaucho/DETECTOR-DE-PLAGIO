@@ -43,3 +43,10 @@ export interface GoogleSearchResponse {
     snippet?: string;
   }[];
 }
+
+// Error response type for better error handling
+export interface ApiErrorResponse {
+  error: string;
+  rawResponse?: string;
+  isHtmlResponse?: boolean;
+}

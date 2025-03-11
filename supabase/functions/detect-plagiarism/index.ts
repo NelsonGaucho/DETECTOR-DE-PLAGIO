@@ -62,11 +62,22 @@ serve(async (req) => {
             temperature: 0.3,
           }),
         })
-        .then(res => res.json())
-        .then(data => ({
-          source: "OpenAI",
-          response: data
-        }))
+        .then(async (res) => {
+          const responseText = await res.text();
+          try {
+            return {
+              source: "OpenAI",
+              response: JSON.parse(responseText)
+            };
+          } catch (error) {
+            console.error("Error al parsear respuesta de OpenAI:", error);
+            return {
+              source: "OpenAI",
+              error: "Error al parsear JSON",
+              rawResponse: responseText.substring(0, 500)
+            };
+          }
+        })
         .catch(err => ({
           source: "OpenAI",
           error: err.message
@@ -89,11 +100,22 @@ serve(async (req) => {
             search_depth: "comprehensive"
           }),
         })
-        .then(res => res.json())
-        .then(data => ({
-          source: "DeepSeek",
-          response: data
-        }))
+        .then(async (res) => {
+          const responseText = await res.text();
+          try {
+            return {
+              source: "DeepSeek",
+              response: JSON.parse(responseText)
+            };
+          } catch (error) {
+            console.error("Error al parsear respuesta de DeepSeek:", error);
+            return {
+              source: "DeepSeek",
+              error: "Error al parsear JSON",
+              rawResponse: responseText.substring(0, 500)
+            };
+          }
+        })
         .catch(err => ({
           source: "DeepSeek",
           error: err.message
@@ -116,11 +138,22 @@ serve(async (req) => {
             detail_level: "high"
           }),
         })
-        .then(res => res.json())
-        .then(data => ({
-          source: "Wowinston.AI",
-          response: data
-        }))
+        .then(async (res) => {
+          const responseText = await res.text();
+          try {
+            return {
+              source: "Wowinston.AI",
+              response: JSON.parse(responseText)
+            };
+          } catch (error) {
+            console.error("Error al parsear respuesta de Wowinston:", error);
+            return {
+              source: "Wowinston.AI",
+              error: "Error al parsear JSON",
+              rawResponse: responseText.substring(0, 500)
+            };
+          }
+        })
         .catch(err => ({
           source: "Wowinston.AI",
           error: err.message
@@ -143,11 +176,32 @@ serve(async (req) => {
             include_sources: true
           }),
         })
-        .then(res => res.json())
-        .then(data => ({
-          source: "Detecting-AI",
-          response: data
-        }))
+        .then(async (res) => {
+          const responseText = await res.text();
+          try {
+            // Intentar parsear como JSON
+            return {
+              source: "Detecting-AI",
+              response: JSON.parse(responseText)
+            };
+          } catch (error) {
+            // Si no es JSON, devolver la respuesta en crudo para diagnóstico
+            console.error("Error al parsear respuesta de Detecting-AI:", error);
+            console.error("Respuesta cruda:", responseText.substring(0, 300));
+            
+            // Verificar si parece ser HTML
+            const isHtml = responseText.trim().startsWith("<!DOCTYPE") || 
+                        responseText.trim().startsWith("<html") || 
+                        responseText.trim().startsWith("<!doctype");
+            
+            return {
+              source: "Detecting-AI",
+              error: isHtml ? "La API devolvió HTML en lugar de JSON" : "Error al parsear JSON",
+              rawResponse: responseText.substring(0, 500),
+              isHtmlResponse: isHtml
+            };
+          }
+        })
         .catch(err => ({
           source: "Detecting-AI",
           error: err.message
@@ -155,13 +209,13 @@ serve(async (req) => {
       );
     }
 
-    // Ejecutar todas las solicitudes en paralelo con un timeout de 10 segundos
+    // Ejecutar todas las solicitudes en paralelo con un timeout de 15 segundos
     const results = await Promise.allSettled(
       apiRequests.map(promise => 
         Promise.race([
           promise,
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), 10000)
+            setTimeout(() => reject(new Error('Timeout')), 15000)
           )
         ])
       )
@@ -188,7 +242,7 @@ serve(async (req) => {
         results: processedResults
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   } catch (error) {
@@ -201,7 +255,7 @@ serve(async (req) => {
       }),
       {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   }
