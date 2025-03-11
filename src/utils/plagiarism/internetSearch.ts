@@ -13,8 +13,12 @@ export const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
   toast.loading("Buscando coincidencias usando múltiples motores de búsqueda...", { id: "internetSearch" });
   
   try {
-    // Optimizamos limitando el número de párrafos a procesar
-    const limitedParagraphs = paragraphs.slice(0, 5); // Máximo 5 párrafos para evitar sobrecargar las APIs
+    // Limitamos el número de párrafos a procesar para evitar sobrecargar las APIs
+    // pero mantenemos un número razonable para una buena cobertura
+    const maxParagraphs = Math.min(paragraphs.length, 10);
+    const limitedParagraphs = paragraphs.slice(0, maxParagraphs);
+    
+    console.log(`Analizando ${limitedParagraphs.length} párrafos con APIs reales`);
     
     // Usamos Promise.all con timeouts para evitar bloqueos
     const results = await Promise.all(
@@ -23,17 +27,23 @@ export const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
           // La búsqueda multimodal usando múltiples APIs
           new Promise(async (resolve) => {
             try {
+              console.log(`Buscando coincidencias para: "${paragraph.substring(0, 50)}..."`);
+              
               // 1. Realizar búsqueda con OpenAI
               const openaiResults = await performOpenAISearch(paragraph);
+              console.log("OpenAI devolvió:", openaiResults.matches?.length || 0, "resultados");
               
               // 2. Realizar búsqueda con DeepSeek
               const deepseekResults = await performDeepseekSearch(paragraph);
+              console.log("DeepSeek devolvió:", deepseekResults.matches?.length || 0, "resultados");
               
               // 3. Realizar búsqueda con Wowinston.AI
               const wowinstonResults = await performWowinstonSearch(paragraph);
+              console.log("Wowinston.AI devolvió:", wowinstonResults.matches?.length || 0, "resultados");
               
               // 4. Realizar búsqueda con Detecting-AI
               const detectingAiResults = await performDetectingAISearch(paragraph);
+              console.log("Detecting-AI devolvió:", detectingAiResults.matches?.length || 0, "resultados");
               
               // 5. Combinar y deduplicar resultados
               const combinedResults = combineSearchResults(
@@ -48,14 +58,15 @@ export const searchInternet = async (paragraphs: string[]): Promise<any[]> => {
               resolve(combinedResults);
             } catch (error) {
               console.error("Error en búsqueda:", error);
-              resolve({ text: paragraph.substring(0, 100) + "...", matches: [] });
+              resolve({ text: paragraph, matches: [] });
             }
           }),
-          // Timeout después de 15 segundos para evitar bloqueos
+          // Timeout después de 20 segundos para evitar bloqueos
           new Promise((resolve) => {
             setTimeout(() => {
-              resolve({ text: paragraph.substring(0, 100) + "...", matches: [] });
-            }, 15000);
+              console.warn("Timeout alcanzado para un párrafo, pasando al siguiente");
+              resolve({ text: paragraph, matches: [] });
+            }, 20000);
           })
         ]);
       })

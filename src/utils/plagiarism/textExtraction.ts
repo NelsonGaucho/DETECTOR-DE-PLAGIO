@@ -1,17 +1,31 @@
 
 import { toast } from "sonner";
+import * as pdfjs from 'pdfjs-dist';
+
+// Inicializar PDF.js
+const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
+pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // Extracts text from files (PDF, DOCX, or plain text)
-export const extractTextFromFile = (file: File): Promise<string> => {
+export const extractTextFromFile = async (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    
+    reader.onload = async (e) => {
       try {
-        const fileContent = e.target?.result as string || "";
-        // Add a timeout to resolve faster
-        setTimeout(() => {
-          resolve(fileContent);
-        }, 500);
+        let fileContent = "";
+        
+        // Procesar el archivo según su tipo
+        if (file.type === "application/pdf") {
+          fileContent = await extractTextFromPDF(e.target?.result as ArrayBuffer);
+        } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+          fileContent = await extractTextFromDOCX(e.target?.result as ArrayBuffer);
+        } else {
+          // Para archivos de texto plano
+          fileContent = e.target?.result as string || "";
+        }
+        
+        resolve(fileContent);
       } catch (error) {
         console.error("Error processing content:", error);
         toast.error("Error al analizar el documento");
@@ -25,67 +39,61 @@ export const extractTextFromFile = (file: File): Promise<string> => {
       reject(error);
     };
     
-    // Optimize file processing based on type
-    if (file.type === "application/pdf") {
-      simulatePdfExtraction(file, reader);
-    } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-      simulateWordExtraction(file, reader);
+    // Leer el archivo según su tipo
+    if (file.type === "application/pdf" || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      reader.readAsArrayBuffer(file);
     } else {
       reader.readAsText(file);
     }
   });
 };
 
-// Simulates the extraction of text from a PDF
-const simulatePdfExtraction = (file: File, reader: FileReader) => {
-  setTimeout(() => {
-    const event = {
-      target: {
-        result: generateSampleText()
-      }
-    };
-    reader.onload(event as any);
-  }, 1000); // Reduced time for faster results
+// Extrae texto de un PDF usando PDF.js
+const extractTextFromPDF = async (arrayBuffer: ArrayBuffer): Promise<string> => {
+  try {
+    const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+    let fullText = "";
+    
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .filter((item: any) => 'str' in item)
+        .map((item: any) => item.str)
+        .join(" ");
+      
+      fullText += pageText + "\n\n";
+    }
+    
+    return fullText;
+  } catch (error) {
+    console.error("Error extracting text from PDF:", error);
+    toast.error("Error al extraer texto del PDF");
+    throw error;
+  }
 };
 
-// Adds a specific simulator for Word documents
-const simulateWordExtraction = (file: File, reader: FileReader) => {
-  // Process Word documents faster
-  setTimeout(() => {
-    const event = {
-      target: {
-        result: generateSampleText() // Use the same sample text generator
-      }
-    };
-    reader.onload(event as any);
-  }, 800); // Even faster for Word documents
+// Extrae texto de un DOCX
+const extractTextFromDOCX = async (arrayBuffer: ArrayBuffer): Promise<string> => {
+  try {
+    // Importar mammoth.js dinámicamente para extraer texto de DOCX
+    const mammoth = await import('mammoth');
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
+  } catch (error) {
+    console.error("Error extracting text from DOCX:", error);
+    toast.error("Error al extraer texto del DOCX");
+    throw error;
+  }
 };
 
 // Extracts paragraphs from content more efficiently
 export const extractParagraphs = (content: string): string[] => {
-  // Optimize paragraph extraction by limiting size
+  // Dividir el contenido en párrafos y filtrar los que son demasiado cortos
   return content
     .split(/\n+/)
     .map(p => p.trim())
-    .filter(p => p.length > 40) // Only consider paragraphs with certain length
-    .slice(0, 15); // Limit number of paragraphs to analyze
-};
-
-// Sample text for simulation purposes
-export const generateSampleText = (): string => {
-  return `
-    La inteligencia artificial (IA) es la simulación de procesos de inteligencia humana por parte de máquinas, especialmente sistemas informáticos. Estos procesos incluyen el aprendizaje (la adquisición de información y reglas para el uso de la información), el razonamiento (usando las reglas para llegar a conclusiones aproximadas o definitivas) y la autocorrección.
-
-    El calentamiento global es el aumento a largo plazo de la temperatura media del sistema climático de la Tierra. Es un aspecto primordial del cambio climático actual, demostrado por el registro de la temperatura global, el aumento del nivel del mar y la disminución de la nieve en el hemisferio norte.
-
-    Las redes sociales han revolucionado la forma en que nos comunicamos y compartimos información. Son sitios de internet formados por comunidades de individuos con intereses o actividades en común, como amistad, parentesco, trabajo, que permiten el contacto entre estos.
-
-    El desarrollo sostenible se ha definido como el desarrollo capaz de satisfacer las necesidades del presente sin comprometer la capacidad de las futuras generaciones para satisfacer sus propias necesidades. Exige esfuerzos concertados para construir un futuro inclusivo, sostenible y resiliente para las personas y el planeta.
-
-    La ciberseguridad es la práctica de defender las computadoras, los servidores, los dispositivos móviles, los sistemas electrónicos, las redes y los datos de ataques maliciosos. También se conoce como seguridad de tecnología de la información o seguridad de la información electrónica.
-
-    La nanotecnología es la manipulación de la materia a escala nanométrica. Una definición más generalizada incluye todos los procedimientos y métodos empleados para manipular la materia a escala atómica para la fabricación de productos.
-  `;
+    .filter(p => p.length > 40); // Solo considerar párrafos con cierta longitud
 };
 
 // Sanitize text (XSS prevention)
