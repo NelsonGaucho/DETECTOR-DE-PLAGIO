@@ -1,4 +1,3 @@
-
 // Main entry point for plagiarism detection using real internet search
 
 import { toast } from "sonner";
@@ -7,7 +6,6 @@ import { searchInternet } from "./plagiarism/searchSimulation";
 import { calculatePlagiarism } from "./plagiarism/analysisUtils";
 import { PlagiarismResult, PlagiarismSource, AnalyzedContent } from "./plagiarism/types";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/AuthContext";
 
 // Re-export types for backward compatibility
 export type { PlagiarismResult, PlagiarismSource, AnalyzedContent };

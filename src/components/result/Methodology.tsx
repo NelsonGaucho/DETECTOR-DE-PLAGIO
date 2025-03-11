@@ -10,18 +10,18 @@ const Methodology = () => {
       </h3>
       
       <p className="text-muted-foreground mb-4">
-        Nuestro sistema analiza tu documento en tiempo real utilizando Edge Functions de Supabase para conectar con múltiples APIs:
+        Nuestro sistema analiza tu documento en tiempo real utilizando una arquitectura modular con Edge Functions de Supabase para conectar con múltiples APIs:
       </p>
       
       <ol className="space-y-3 list-decimal list-inside text-muted-foreground">
         <li>Extracción de texto del documento subido</li>
         <li>División del contenido en segmentos analizables</li>
-        <li>Búsqueda en tiempo real mediante Edge Functions de Supabase</li>
+        <li>Procesamiento paralelo de búsquedas en múltiples motores</li>
         <li>Análisis avanzado con DeepSeek API</li>
         <li>Verificación semántica con OpenAI API</li>
         <li>Detección de fuentes con Wowinston.AI</li>
         <li>Análisis académico con Detecting-AI</li>
-        <li>Consolidación de resultados de múltiples motores</li>
+        <li>Combinación y deduplicación de resultados</li>
         <li>Almacenamiento seguro de análisis en base de datos</li>
         <li>Cálculo de porcentaje de originalidad utilizando datos consolidados</li>
       </ol>
@@ -32,7 +32,7 @@ const Methodology = () => {
           <span>
             Este enfoque multi-API (DeepSeek, OpenAI, Wowinston.AI y Detecting-AI) garantiza una mayor precisión al contrastar el contenido con diversas 
             fuentes académicas, modelos de lenguaje especializados y bases de conocimiento, 
-            todo procesado de forma segura mediante Edge Functions.
+            utilizando una arquitectura optimizada y modular para mayor rendimiento.
           </span>
         </p>
       </div>
