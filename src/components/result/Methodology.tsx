@@ -1,32 +1,37 @@
 
-import { Clock } from "lucide-react";
+import { Server, Globe } from "lucide-react";
 
 const Methodology = () => {
   return (
     <div className="bg-white/50 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-100 dark:border-slate-700">
       <h3 className="text-xl font-semibold mb-4 flex items-center">
-        <Clock className="mr-2 h-5 w-5 text-primary" />
+        <Server className="mr-2 h-5 w-5 text-primary" />
         Metodología de análisis
       </h3>
       
       <p className="text-muted-foreground mb-4">
-        Nuestro algoritmo avanzado analiza tu documento en tiempo real comparándolo con múltiples fuentes usando diversas APIs:
+        Nuestro sistema analiza tu documento en tiempo real utilizando Edge Functions de Supabase para conectar con múltiples APIs:
       </p>
       
       <ol className="space-y-3 list-decimal list-inside text-muted-foreground">
         <li>Extracción de texto del documento subido</li>
         <li>División del contenido en segmentos analizables</li>
-        <li>Búsqueda en tiempo real con Google Scholar mediante SerpAPI</li>
-        <li>Análisis semántico con DeepSeek API</li>
-        <li>Verificación cruzada con OpenAI API (embeddings y chat completions)</li>
-        <li>Combinación de resultados de múltiples motores</li>
+        <li>Búsqueda en tiempo real mediante Edge Functions de Supabase</li>
+        <li>Análisis avanzado con DeepSeek API</li>
+        <li>Verificación semántica con OpenAI API</li>
+        <li>Consolidación de resultados de múltiples motores</li>
+        <li>Almacenamiento seguro de análisis en base de datos</li>
         <li>Cálculo de porcentaje de originalidad utilizando datos consolidados</li>
       </ol>
       
       <div className="mt-4 p-3 bg-primary/10 rounded-lg">
-        <p className="text-sm text-muted-foreground">
-          Este enfoque multi-API garantiza una mayor precisión al contrastar el contenido con diversas fuentes de 
-          búsqueda académicas, bases de conocimiento y modelos de lenguaje especializados, reduciendo falsos positivos y negativos.
+        <p className="text-sm text-muted-foreground flex items-start">
+          <Globe className="h-4 w-4 text-primary mr-2 mt-0.5 flex-shrink-0" />
+          <span>
+            Este enfoque multi-API garantiza una mayor precisión al contrastar el contenido con diversas 
+            fuentes académicas, modelos de lenguaje especializados y bases de conocimiento, 
+            todo procesado de forma segura mediante Edge Functions.
+          </span>
         </p>
       </div>
     </div>

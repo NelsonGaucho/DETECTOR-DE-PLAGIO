@@ -6,6 +6,8 @@ import { extractParagraphs, extractTextFromFile, sanitizeText } from "./plagiari
 import { searchInternet } from "./plagiarism/searchSimulation";
 import { calculatePlagiarism } from "./plagiarism/analysisUtils";
 import { PlagiarismResult, PlagiarismSource, AnalyzedContent } from "./plagiarism/types";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 // Re-export types for backward compatibility
 export type { PlagiarismResult, PlagiarismSource, AnalyzedContent };
@@ -18,7 +20,7 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
       const timeout = setTimeout(() => {
         toast.error("La operación ha tardado demasiado. Intente con un archivo más pequeño.");
         reject(new Error("Operation timed out"));
-      }, 15000); // 15 seconds timeout
+      }, 30000); // Aumentado a 30 segundos para APIs reales
       
       // Extract text from the file (PDF or DOCX)
       extractTextFromFile(file)
@@ -35,6 +37,28 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
             
             // Clear timeout as operation completed successfully
             clearTimeout(timeout);
+            
+            // Guardar los resultados en la base de datos
+            try {
+              const { error } = await supabase.functions.invoke('save-plagiarism-check', {
+                body: {
+                  documentName: file.name,
+                  documentContent: fileContent.substring(0, 10000), // Limitar tamaño
+                  plagiarismPercentage: plagiarismData.percentage,
+                  sources: plagiarismData.sources,
+                  // Obtener userId del contexto de autenticación si está disponible
+                  userId: null // Se actualizará si el usuario está autenticado
+                }
+              });
+              
+              if (error) {
+                console.error("Error guardando resultados:", error);
+                // No bloqueamos el flujo si hay error al guardar
+              }
+            } catch (saveError) {
+              console.error("Error en Edge Function para guardar:", saveError);
+              // No bloqueamos el flujo si hay error al guardar
+            }
             
             // Return complete result
             resolve(plagiarismData);

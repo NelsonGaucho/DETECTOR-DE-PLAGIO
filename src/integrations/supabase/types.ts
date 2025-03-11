@@ -9,7 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      plagiarism_checks: {
+        Row: {
+          created_at: string
+          document_content: string
+          document_name: string
+          id: string
+          plagiarism_percentage: number
+          sources: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_content: string
+          document_name: string
+          id?: string
+          plagiarism_percentage: number
+          sources?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_content?: string
+          document_name?: string
+          id?: string
+          plagiarism_percentage?: number
+          sources?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
