@@ -1,8 +1,9 @@
+
 // Main entry point for plagiarism detection using real internet search
 
 import { toast } from "sonner";
 import { extractParagraphs, extractTextFromFile, sanitizeText } from "./plagiarism/textExtraction";
-import { searchInternet } from "./plagiarism/searchSimulation";
+import { searchInternet } from "./plagiarism/internetSearch";
 import { calculatePlagiarism } from "./plagiarism/analysisUtils";
 import { PlagiarismResult, PlagiarismSource, AnalyzedContent } from "./plagiarism/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,8 +31,17 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
             // Get real search results for each paragraph
             const results = await searchInternet(paragraphs);
             
+            // Store raw responses for display
+            const rawResponses = results.map(result => ({ 
+              text: result.text,
+              rawResponse: result.rawResponse 
+            }));
+            
             // Calculate plagiarism percentage based on results
             const plagiarismData = calculatePlagiarism(results, fileContent);
+            
+            // Add raw responses to the plagiarism data
+            plagiarismData.rawResponses = rawResponses;
             
             // Clear timeout as operation completed successfully
             clearTimeout(timeout);

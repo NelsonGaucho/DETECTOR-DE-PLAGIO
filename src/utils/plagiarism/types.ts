@@ -6,6 +6,7 @@ export interface PlagiarismResult {
   sources: PlagiarismSource[];
   documentContent: string;
   analyzedContent: AnalyzedContent[];
+  rawResponses?: any[]; // Raw responses from Supabase
 }
 
 export interface PlagiarismSource {

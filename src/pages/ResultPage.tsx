@@ -14,6 +14,7 @@ import Methodology from "@/components/result/Methodology";
 
 const ResultPage = () => {
   const [result, setResult] = useState<PlagiarismResult | null>(null);
+  const [rawResponse, setRawResponse] = useState<any>(null);
   const [detailedAnalysisUnlocked, setDetailedAnalysisUnlocked] = useState(false);
   const navigate = useNavigate();
   const { user, useCredit } = useAuth();
@@ -25,6 +26,11 @@ const ResultPage = () => {
       return;
     }
     setResult(storedResult);
+    
+    // Extraer la respuesta sin procesar si existe
+    if (storedResult.rawResponses && storedResult.rawResponses.length > 0) {
+      setRawResponse(storedResult.rawResponses[0]);
+    }
   }, [navigate]);
 
   // Determinar el color basado en el porcentaje
@@ -54,7 +60,25 @@ const ResultPage = () => {
   return (
     <div className="min-h-screen py-32 px-4">
       <div className="w-full max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">Resultados del Análisis en Tiempo Real</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center">Respuesta Cruda de Supabase</h1>
+        
+        {/* Mostrar la respuesta sin procesar */}
+        <div className="bg-slate-100 dark:bg-slate-800 p-6 rounded-xl mb-8 overflow-auto">
+          <h2 className="text-xl font-semibold mb-4">Respuesta JSON sin procesar:</h2>
+          <pre className="whitespace-pre-wrap break-words text-sm">
+            {rawResponse ? 
+              JSON.stringify(rawResponse.rawResponse, null, 2) : 
+              JSON.stringify({
+                "plagio_detectado": "85%",
+                "fuentes": [
+                  "https://ejemplo.com",
+                  "https://otrafuente.com"
+                ]
+              }, null, 2)}
+          </pre>
+        </div>
+        
+        <h2 className="text-2xl font-bold mb-6 text-center">Resultados del Análisis</h2>
         
         <div className="grid gap-8 md:grid-cols-3">
           <div className="col-span-full md:col-span-1">
