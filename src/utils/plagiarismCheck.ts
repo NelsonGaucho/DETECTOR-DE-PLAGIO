@@ -2,7 +2,7 @@
 // Main entry point for plagiarism detection
 
 import { toast } from "sonner";
-import { extractParagraphs, extractTextFromFile, sanitizeText } from "./plagiarism/textExtraction";
+import { extractTextFromFile } from "./plagiarism/textExtraction";
 import { analyzePlagiarismWithSupabase } from "@/services/plagiarism/supabaseService";
 import { PlagiarismResult, PlagiarismSource, AnalyzedContent, AiAnalysisDetails } from "./plagiarism/types";
 
@@ -27,8 +27,8 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
           console.log("ÉXITO: Texto extraído del archivo, longitud:", fileContent.length);
           
           try {
-            // Use Supabase Edge Function for analysis with Google and Google Scholar
-            console.log("INICIO: Análisis de plagio con Supabase Edge Function");
+            // Use Supabase Edge Function for analysis with Google and Google Scholar only
+            console.log("INICIO: Análisis de plagio con Supabase Edge Function (Google + Google Scholar)");
             const result = await analyzePlagiarismWithSupabase(fileContent);
             
             // Clear timeout as operation completed
@@ -71,4 +71,4 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
 };
 
 // Re-export sanitizeText for backward compatibility
-export { sanitizeText };
+export { sanitizeText } from "./plagiarism/textExtraction";

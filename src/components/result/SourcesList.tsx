@@ -1,8 +1,7 @@
 
-import { ExternalLink, LinkIcon, Search, AlertTriangle, Info } from "lucide-react";
+import { ExternalLink, LinkIcon, Search, Info } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { PlagiarismSource } from "@/utils/plagiarism/types";
-import { Button } from "@/components/ui/button";
 
 type SourcesListProps = {
   sources: PlagiarismSource[];
