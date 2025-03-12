@@ -1,17 +1,16 @@
 
-// Main entry point for plagiarism detection using real internet search
+// Main entry point for plagiarism detection using simulated search
 
 import { toast } from "sonner";
 import { extractParagraphs, extractTextFromFile, sanitizeText } from "./plagiarism/textExtraction";
 import { searchInternet } from "./plagiarism/internetSearch";
 import { calculatePlagiarism } from "./plagiarism/analysisUtils";
 import { PlagiarismResult, PlagiarismSource, AnalyzedContent } from "./plagiarism/types";
-import { supabase } from "@/integrations/supabase/client";
 
 // Re-export types for backward compatibility
 export type { PlagiarismResult, PlagiarismSource, AnalyzedContent };
 
-// Main function to check plagiarism using Internet search (optimized)
+// Main function to check plagiarism using simulated search
 export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => {
   return new Promise((resolve, reject) => {
     try {
@@ -19,7 +18,7 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
       const timeout = setTimeout(() => {
         toast.error("La operación ha tardado demasiado. Intente con un archivo más pequeño.");
         reject(new Error("Operation timed out"));
-      }, 30000); // Aumentado a 30 segundos para APIs reales
+      }, 15000); // reducido a 15 segundos ya que ahora es simulado
       
       // Extract text from the file (PDF or DOCX)
       extractTextFromFile(file)
@@ -28,7 +27,7 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
             // Split content into paragraphs for analysis
             const paragraphs = extractParagraphs(fileContent);
             
-            // Get real search results for each paragraph
+            // Get simulated search results for each paragraph
             const results = await searchInternet(paragraphs);
             
             // Store raw responses for display
@@ -46,32 +45,8 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
             // Clear timeout as operation completed successfully
             clearTimeout(timeout);
             
-            // Obtener el token de autenticación si el usuario está autenticado
-            const { data: { session } } = await supabase.auth.getSession();
-            const token = session?.access_token;
-            
-            // Guardar los resultados en la base de datos
-            try {
-              const { error } = await supabase.functions.invoke('save-plagiarism-check', {
-                body: {
-                  documentName: file.name,
-                  documentContent: fileContent.substring(0, 10000), // Limitar tamaño
-                  plagiarismPercentage: plagiarismData.percentage,
-                  sources: plagiarismData.sources,
-                  // Enviar userId desde el cliente como respaldo
-                  requestUserId: session?.user?.id || null
-                },
-                headers: token ? { Authorization: `Bearer ${token}` } : undefined
-              });
-              
-              if (error) {
-                console.error("Error guardando resultados:", error);
-                // No bloqueamos el flujo si hay error al guardar
-              }
-            } catch (saveError) {
-              console.error("Error en Edge Function para guardar:", saveError);
-              // No bloqueamos el flujo si hay error al guardar
-            }
+            // Simulamos la operación de guardar sin realmente conectar con Supabase
+            console.log("Simulación: Guardando resultados del análisis de plagio localmente");
             
             // Return complete result
             resolve(plagiarismData);
