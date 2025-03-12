@@ -10,7 +10,7 @@ const Methodology = () => {
       </h3>
       
       <p className="text-muted-foreground mb-4">
-        El sistema utiliza múltiples técnicas open-source para un análisis completo:
+        El sistema utiliza técnicas de búsqueda en Internet para un análisis completo:
       </p>
       
       <div className="space-y-6">
@@ -21,7 +21,7 @@ const Methodology = () => {
           </h4>
           <ol className="space-y-2 list-decimal list-inside text-muted-foreground ml-2">
             <li>Extracción de texto del documento subido</li>
-            <li>Búsqueda de fragmentos en fuentes públicas</li>
+            <li>Búsqueda de fragmentos en Google y Google Scholar</li>
             <li>Scraping de contenido para comparación detallada</li>
             <li>Algoritmos de similitud (Jaccard, Levenshtein, Cosine)</li>
             <li>Cálculo de percentiles y generación de informe</li>
@@ -36,7 +36,7 @@ const Methodology = () => {
           <ol className="space-y-2 list-decimal list-inside text-muted-foreground ml-2">
             <li>Análisis estadístico de patrones lingüísticos</li>
             <li>Evaluación de entropía y distribución de palabras</li>
-            <li>Comparación con bases de datos de textos generados por IA</li>
+            <li>Detección de palabras clave y estructuras típicas de IA</li>
             <li>Heurísticas basadas en investigación académica actual</li>
             <li>Asignación de probabilidad de generación por IA</li>
           </ol>
@@ -45,12 +45,12 @@ const Methodology = () => {
         <div>
           <h4 className="font-medium flex items-center mb-2">
             <Database className="mr-2 h-4 w-4 text-primary" />
-            Tecnologías utilizadas
+            Fuentes consultadas
           </h4>
           <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-2">
-            <li>Algoritmos de código abierto para procesamiento de texto</li>
-            <li>Técnicas de web scraping para acceso a fuentes públicas</li>
-            <li>Modelos estadísticos para detección de IA</li>
+            <li>Google Search: Búsqueda general en Internet</li>
+            <li>Google Scholar: Artículos científicos y académicos</li>
+            <li>Algoritmos de análisis de similitud de texto</li>
             <li>Métodos de comparación de texto optimizados</li>
           </ul>
         </div>
@@ -60,9 +60,9 @@ const Methodology = () => {
         <p className="text-sm text-blue-800 dark:text-blue-200 flex items-start">
           <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
           <span>
-            Este sistema utiliza exclusivamente tecnologías open-source y no depende de
-            APIs de pago. Todos los análisis se realizan mediante algoritmos propios
-            que respetan la privacidad de los documentos analizados.
+            Este sistema utiliza técnicas de scraping web para buscar en fuentes públicas.
+            La precisión puede variar dependiendo de la disponibilidad de las fuentes y 
+            las restricciones de los motores de búsqueda.
           </span>
         </p>
       </div>

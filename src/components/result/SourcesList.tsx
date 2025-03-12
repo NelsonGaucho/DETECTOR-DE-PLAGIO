@@ -1,7 +1,7 @@
 
 import { ExternalLink, LinkIcon, Search, AlertTriangle, Info } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { PlagiarismSource } from "@/utils/plagiarismCheck";
+import { PlagiarismSource } from "@/utils/plagiarism/types";
 import { Button } from "@/components/ui/button";
 
 type SourcesListProps = {
@@ -24,8 +24,8 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
           <Info className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" />
           <div>
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              El sistema busca en fuentes en internet utilizando técnicas avanzadas de análisis.
-              Los resultados pueden variar dependiendo de la disponibilidad de las fuentes.
+              El sistema busca en Google y Google Scholar utilizando técnicas de análisis avanzadas.
+              Los resultados dependen de la disponibilidad de las fuentes en internet.
             </p>
           </div>
         </div>
@@ -41,7 +41,8 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
         <div className="flex flex-col items-center justify-center py-8">
           <Search className="h-12 w-12 text-muted-foreground mb-4" />
           <p className="text-muted-foreground text-center">
-            No se han detectado fuentes para este documento o el servicio no está disponible.
+            No se han detectado fuentes para este documento.
+            Esto puede significar que el texto es original o que no se encontraron coincidencias significativas.
           </p>
         </div>
       )}
@@ -76,7 +77,7 @@ const SourceCard = ({ source, getColorClass }: { source: PlagiarismSource, getCo
         </a>
         <span className="text-xs text-muted-foreground flex items-center">
           <span className="bg-secondary/70 px-2 py-0.5 rounded-full">
-            {source.source || "Búsqueda en línea"}
+            {source.source || "Google Search"}
           </span>
         </span>
       </div>

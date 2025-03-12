@@ -10,6 +10,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
  * Envía texto al backend de Supabase Edge Function para análisis de plagio
+ * usando Google y Google Scholar
  */
 export const analyzePlagiarismWithSupabase = async (text: string): Promise<PlagiarismResult> => {
   try {
@@ -17,13 +18,13 @@ export const analyzePlagiarismWithSupabase = async (text: string): Promise<Plagi
       id: "supabaseAnalysis",
     });
 
-    // Llamar a la función Edge de Supabase
+    // Llamar a la función Edge de Supabase que usa Google y Google Scholar
     const { data, error } = await supabase.functions.invoke('detect-plagiarism', {
       body: { text },
     });
 
     if (error) {
-      throw new Error(`Error en el servicio de análisis: ${error.message}`);
+      throw new Error(`Error en el servicio de búsqueda: ${error.message}`);
     }
 
     toast.success("Análisis completado", {
@@ -42,7 +43,7 @@ export const analyzePlagiarismWithSupabase = async (text: string): Promise<Plagi
         text: content.text,
         isPlagiarized: content.is_plagiarized,
       })) || [],
-      rawResponses: [{ text: "Análisis completo", rawResponse: data }],
+      rawResponses: [{ text: "Análisis con Google y Google Scholar", rawResponse: data }],
       aiGeneratedProbability: data.ai_generated_probability || 0,
       aiAnalysisDetails: data.ai_analysis_details || null,
     };
