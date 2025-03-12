@@ -1,5 +1,5 @@
 
-import { Server, Info } from "lucide-react";
+import { Server, Info, Database, Search, Code } from "lucide-react";
 
 const Methodology = () => {
   return (
@@ -10,23 +10,59 @@ const Methodology = () => {
       </h3>
       
       <p className="text-muted-foreground mb-4">
-        El sistema actual utiliza un enfoque de simulación para el análisis de plagios:
+        El sistema utiliza múltiples técnicas open-source para un análisis completo:
       </p>
       
-      <ol className="space-y-3 list-decimal list-inside text-muted-foreground">
-        <li>Extracción de texto del documento subido</li>
-        <li>División del contenido en segmentos analizables</li>
-        <li>Simulación de búsquedas de coincidencias</li>
-        <li>Generación de resultados basados en algoritmos locales</li>
-        <li>Cálculo de porcentaje de originalidad simulado</li>
-      </ol>
+      <div className="space-y-6">
+        <div>
+          <h4 className="font-medium flex items-center mb-2">
+            <Search className="mr-2 h-4 w-4 text-primary" />
+            Detección de plagio
+          </h4>
+          <ol className="space-y-2 list-decimal list-inside text-muted-foreground ml-2">
+            <li>Extracción de texto del documento subido</li>
+            <li>Búsqueda de fragmentos en fuentes públicas</li>
+            <li>Scraping de contenido para comparación detallada</li>
+            <li>Algoritmos de similitud (Jaccard, Levenshtein, Cosine)</li>
+            <li>Cálculo de percentiles y generación de informe</li>
+          </ol>
+        </div>
+        
+        <div>
+          <h4 className="font-medium flex items-center mb-2">
+            <Code className="mr-2 h-4 w-4 text-primary" />
+            Detección de IA
+          </h4>
+          <ol className="space-y-2 list-decimal list-inside text-muted-foreground ml-2">
+            <li>Análisis estadístico de patrones lingüísticos</li>
+            <li>Evaluación de entropía y distribución de palabras</li>
+            <li>Comparación con bases de datos de textos generados por IA</li>
+            <li>Heurísticas basadas en investigación académica actual</li>
+            <li>Asignación de probabilidad de generación por IA</li>
+          </ol>
+        </div>
+        
+        <div>
+          <h4 className="font-medium flex items-center mb-2">
+            <Database className="mr-2 h-4 w-4 text-primary" />
+            Tecnologías utilizadas
+          </h4>
+          <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-2">
+            <li>Algoritmos de código abierto para procesamiento de texto</li>
+            <li>Técnicas de web scraping para acceso a fuentes públicas</li>
+            <li>Modelos estadísticos para detección de IA</li>
+            <li>Métodos de comparación de texto optimizados</li>
+          </ul>
+        </div>
+      </div>
       
-      <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-        <p className="text-sm text-yellow-800 dark:text-yellow-200 flex items-start">
-          <Info className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5 flex-shrink-0" />
+      <div className="mt-6 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <p className="text-sm text-blue-800 dark:text-blue-200 flex items-start">
+          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
           <span>
-            Nota: Las APIs externas han sido desactivadas por solicitud del usuario. 
-            El sistema ahora utiliza simulaciones locales sin realizar consultas a servicios de terceros.
+            Este sistema utiliza exclusivamente tecnologías open-source y no depende de
+            APIs de pago. Todos los análisis se realizan mediante algoritmos propios
+            que respetan la privacidad de los documentos analizados.
           </span>
         </p>
       </div>

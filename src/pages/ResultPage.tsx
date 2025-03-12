@@ -11,6 +11,7 @@ import SourcesList from "@/components/result/SourcesList";
 import DetailedAnalysis from "@/components/result/DetailedAnalysis";
 import Recommendations from "@/components/result/Recommendations";
 import Methodology from "@/components/result/Methodology";
+import AiDetectionResults from "@/components/result/AiDetectionResults";
 
 const ResultPage = () => {
   const [result, setResult] = useState<PlagiarismResult | null>(null);
@@ -60,25 +61,17 @@ const ResultPage = () => {
   return (
     <div className="min-h-screen py-32 px-4">
       <div className="w-full max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">Respuesta Cruda de Supabase</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center">Resultados del Análisis</h1>
         
-        {/* Mostrar la respuesta sin procesar */}
-        <div className="bg-slate-100 dark:bg-slate-800 p-6 rounded-xl mb-8 overflow-auto">
-          <h2 className="text-xl font-semibold mb-4">Respuesta JSON sin procesar:</h2>
-          <pre className="whitespace-pre-wrap break-words text-sm">
-            {rawResponse ? 
-              JSON.stringify(rawResponse.rawResponse, null, 2) : 
-              JSON.stringify({
-                "plagio_detectado": "85%",
-                "fuentes": [
-                  "https://ejemplo.com",
-                  "https://otrafuente.com"
-                ]
-              }, null, 2)}
-          </pre>
-        </div>
-        
-        <h2 className="text-2xl font-bold mb-6 text-center">Resultados del Análisis</h2>
+        {/* Mostrar la respuesta sin procesar si existe */}
+        {rawResponse && (
+          <div className="bg-slate-100 dark:bg-slate-800 p-6 rounded-xl mb-8 overflow-auto">
+            <h2 className="text-xl font-semibold mb-4">Respuesta JSON del análisis:</h2>
+            <pre className="whitespace-pre-wrap break-words text-sm">
+              {JSON.stringify(rawResponse.rawResponse, null, 2)}
+            </pre>
+          </div>
+        )}
         
         <div className="grid gap-8 md:grid-cols-3">
           <div className="col-span-full md:col-span-1">
@@ -92,6 +85,13 @@ const ResultPage = () => {
           <div className="col-span-full md:col-span-2 space-y-8">
             <SourcesList 
               sources={result.sources}
+              getColorClass={getColorClass}
+            />
+            
+            {/* Resultados de la detección de IA */}
+            <AiDetectionResults
+              probability={result.aiGeneratedProbability}
+              details={result.aiAnalysisDetails}
               getColorClass={getColorClass}
             />
             

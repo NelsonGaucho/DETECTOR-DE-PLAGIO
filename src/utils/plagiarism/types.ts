@@ -6,14 +6,16 @@ export interface PlagiarismResult {
   sources: PlagiarismSource[];
   documentContent: string;
   analyzedContent: AnalyzedContent[];
-  rawResponses?: any[]; // Raw responses from Supabase
+  rawResponses?: any[]; // Raw responses from analysis
+  aiGeneratedProbability?: number; // Probabilidad de que el texto sea generado por IA
+  aiAnalysisDetails?: AiAnalysisDetails; // Detalles del análisis de IA
 }
 
 export interface PlagiarismSource {
   url: string;
   title: string;
   matchPercentage: number;
-  source?: string; // Engine that found this source (Google, DeepSeek-R1, OpenAI)
+  source?: string; // Engine that found this source (Google, Local, Python)
 }
 
 export interface AnalyzedContent {
@@ -21,27 +23,13 @@ export interface AnalyzedContent {
   isPlagiarized: boolean;
 }
 
-// New types for API responses
-export interface OpenAIEmbeddingResponse {
-  data: {
-    embedding: number[];
-  }[];
-}
-
-export interface DeepSeekSearchResponse {
-  results: {
-    url: string;
-    title?: string;
-    snippet?: string;
-  }[];
-}
-
-export interface GoogleSearchResponse {
-  items?: {
-    link: string;
-    title: string;
-    snippet?: string;
-  }[];
+export interface AiAnalysisDetails {
+  entropy?: number; // Entropía del texto
+  rarityScore?: number; // Puntuación de rareza de palabras
+  patternScore?: number; // Puntuación de patrones típicos de IA
+  confidenceScore?: number; // Confianza del modelo en la detección
+  modelDetails?: string; // Detalles del modelo usado para la detección
+  features?: { [key: string]: number }; // Características específicas analizadas
 }
 
 // Error response type for better error handling
