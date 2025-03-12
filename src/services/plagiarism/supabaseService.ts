@@ -10,7 +10,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
  * Envía texto al backend de Supabase Edge Function para análisis de plagio
- * usando Google y Google Scholar
+ * usando exclusivamente Google y Google Scholar
  */
 export const analyzePlagiarismWithSupabase = async (text: string): Promise<PlagiarismResult> => {
   try {
@@ -18,15 +18,20 @@ export const analyzePlagiarismWithSupabase = async (text: string): Promise<Plagi
       id: "supabaseAnalysis",
     });
 
+    console.log("Enviando texto para análisis con detect-plagiarism Edge Function");
+    
     // Llamar a la función Edge de Supabase que usa Google y Google Scholar
     const { data, error } = await supabase.functions.invoke('detect-plagiarism', {
       body: { text },
     });
 
     if (error) {
+      console.error("Error en el servicio detect-plagiarism:", error);
       throw new Error(`Error en el servicio de búsqueda: ${error.message}`);
     }
 
+    console.log("Respuesta de detect-plagiarism recibida:", data);
+    
     toast.success("Análisis completado", {
       id: "supabaseAnalysis",
     });
@@ -37,6 +42,7 @@ export const analyzePlagiarismWithSupabase = async (text: string): Promise<Plagi
         url: source.url,
         title: source.title || "Fuente detectada",
         matchPercentage: source.match_percentage || 0,
+        source: source.source || "Google Search",
       })) || [],
       documentContent: data.document_content || "",
       analyzedContent: data.analyzed_content?.map((content: any) => ({
@@ -47,7 +53,7 @@ export const analyzePlagiarismWithSupabase = async (text: string): Promise<Plagi
       aiGeneratedProbability: data.ai_generated_probability || 0,
       aiAnalysisDetails: data.ai_analysis_details || null,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error al analizar el plagio con Supabase:", error);
     toast.error(`Error en el análisis: ${error.message}`, {
       id: "supabaseAnalysis",

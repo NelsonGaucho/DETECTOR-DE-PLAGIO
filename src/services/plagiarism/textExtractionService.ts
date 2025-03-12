@@ -4,7 +4,7 @@ import { PlagiarismResult } from "@/utils/plagiarism/types";
 import { analyzePlagiarismWithSupabase } from "./supabaseService";
 
 /**
- * Extrae texto de un archivo para análisis
+ * Extrae texto de un archivo y lo envía directamente a Supabase para análisis
  */
 export const extractAndAnalyzeText = async (file: File): Promise<PlagiarismResult> => {
   try {
@@ -20,9 +20,11 @@ export const extractAndAnalyzeText = async (file: File): Promise<PlagiarismResul
       id: "textExtraction",
     });
 
-    // Analizar el texto extraído
+    console.log("Texto extraído, enviando a Supabase para análisis");
+    
+    // Analizar el texto extraído únicamente con Supabase (Google y Google Scholar)
     return await analyzePlagiarismWithSupabase(fileContent);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error al extraer y analizar texto:", error);
     toast.error(`Error al procesar el documento: ${error.message}`, {
       id: "textExtraction",

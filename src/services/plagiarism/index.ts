@@ -4,12 +4,12 @@ import { extractAndAnalyzeText } from "./textExtractionService";
 import { analyzePlagiarismWithSupabase } from "./supabaseService";
 
 /**
- * Envía un archivo al backend para análisis de plagio y detección de IA
- * (Mantenido por compatibilidad con el código existente)
+ * Envía un archivo para análisis de plagio utilizando exclusivamente Google y Google Scholar
+ * a través de la función Edge de Supabase
  */
 export const analyzePlagiarismWithPython = async (file: File): Promise<PlagiarismResult> => {
   try {
-    // Ahora usamos el servicio de Supabase Edge en lugar del backend Python
+    console.log("Redirigiendo solicitud a extractAndAnalyzeText (Supabase)");
     return await extractAndAnalyzeText(file);
   } catch (error) {
     console.error("Error al analizar el plagio:", error);
