@@ -1,5 +1,5 @@
 
-// Main entry point for plagiarism detection using Python backend
+// Main entry point for plagiarism detection
 
 import { toast } from "sonner";
 import { extractParagraphs, extractTextFromFile, sanitizeText } from "./plagiarism/textExtraction";
@@ -20,7 +20,7 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
         reject(new Error("Operation timed out"));
       }, 30000); // 30 segundos para el análisis completo
       
-      // Use Python backend for analysis
+      // Use our serverless function for analysis
       analyzePlagiarismWithPython(file)
         .then(result => {
           // Clear timeout as operation completed
@@ -28,8 +28,8 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
           resolve(result);
         })
         .catch(error => {
-          // If the Python service fails, try the fallback local method
-          console.error("Python service failed, using fallback local method:", error);
+          // If the service fails, try the fallback local method
+          console.error("Service failed, using fallback local method:", error);
           toast.warning("Servicio de análisis avanzado no disponible. Usando método local simplificado.", {
             duration: 5000,
           });

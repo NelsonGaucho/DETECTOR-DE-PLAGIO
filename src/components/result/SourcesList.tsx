@@ -24,8 +24,8 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
           <Info className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" />
           <div>
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              El servicio de detección utiliza análisis con técnicas open-source para identificar fuentes. 
-              Para utilizar este servicio, asegúrate de tener el backend de Python ejecutándose en tu servidor.
+              El sistema busca en fuentes en internet utilizando técnicas avanzadas de análisis.
+              Los resultados pueden variar dependiendo de la disponibilidad de las fuentes.
             </p>
           </div>
         </div>
@@ -75,7 +75,9 @@ const SourceCard = ({ source, getColorClass }: { source: PlagiarismSource, getCo
           <ExternalLink className="ml-1 h-3 w-3 text-muted-foreground" />
         </a>
         <span className="text-xs text-muted-foreground flex items-center">
-          <span className="bg-secondary/70 px-2 py-0.5 rounded-full">Análisis open-source</span>
+          <span className="bg-secondary/70 px-2 py-0.5 rounded-full">
+            {source.source || "Búsqueda en línea"}
+          </span>
         </span>
       </div>
     </div>
