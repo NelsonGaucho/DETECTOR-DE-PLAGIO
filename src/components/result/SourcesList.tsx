@@ -23,7 +23,7 @@ const SourcesList = ({ sources, getColorClass }: SourcesListProps) => {
           <Info className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" />
           <div>
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              El sistema busca en Google y Google Scholar utilizando técnicas de análisis avanzadas.
+              El sistema busca en Google y Google Scholar utilizando técnicas avanzadas de análisis de similitud.
               Los resultados dependen de la disponibilidad de las fuentes en internet.
             </p>
           </div>

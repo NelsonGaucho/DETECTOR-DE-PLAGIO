@@ -4,7 +4,7 @@ import { PlagiarismResult } from "@/utils/plagiarism/types";
 import { createClient } from "@supabase/supabase-js";
 
 // Cliente de Supabase (usando las variables de entorno disponibles en el navegador)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://your-supabase-url.supabase.co";
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -41,10 +41,10 @@ export const analyzePlagiarismWithSupabase = async (text: string): Promise<Plagi
       sources: data.sources?.map((source: any) => ({
         url: source.url,
         title: source.title || "Fuente detectada",
-        matchPercentage: source.match_percentage || 0,
+        matchPercentage: source.matchPercentage || 0,
         source: source.source || "Google Search",
       })) || [],
-      documentContent: data.document_content || "",
+      documentContent: data.document_content || text.substring(0, 1000),
       analyzedContent: data.analyzed_content?.map((content: any) => ({
         text: content.text,
         isPlagiarized: content.is_plagiarized,
