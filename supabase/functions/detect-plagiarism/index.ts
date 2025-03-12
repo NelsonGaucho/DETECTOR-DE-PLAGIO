@@ -26,7 +26,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Texto recibido para análisis:", text.substring(0, 100) + "...");
+    console.log("[detect-plagiarism] Texto recibido para análisis:", text.substring(0, 100) + "...");
 
     // Dividir el texto en fragmentos para búsqueda
     const textFragments = [];
@@ -41,6 +41,7 @@ serve(async (req) => {
     
     // Limitar a máximo 5 fragmentos para evitar excesivas búsquedas y mejorar rendimiento
     const searchFragments = textFragments.slice(0, 5);
+    console.log("[detect-plagiarism] Fragmentos a buscar:", searchFragments.length);
     
     // Realizar búsquedas en paralelo con manejo de timeout mejorado
     const searchPromises = [];
@@ -49,15 +50,21 @@ serve(async (req) => {
     for (let i = 0; i < searchFragments.length; i++) {
       // Añadir retraso entre búsquedas para evitar bloqueos
       const delay = i * 400; // 400ms entre búsquedas 
+      const fragment = searchFragments[i];
+      const useScholar = i % 2 === 1;
+      
+      console.log(`[detect-plagiarism] Preparando búsqueda ${i+1}: ${fragment.substring(0, 30)}... (${useScholar ? 'Scholar' : 'Google'})`);
+      
       searchPromises.push(
         new Promise(resolve => setTimeout(
-          () => resolve(searchGoogle(searchFragments[i], i % 2 === 1)), 
+          () => resolve(searchGoogle(fragment, useScholar)), 
           delay
         ))
       );
     }
     
     // Ejecutar todas las búsquedas con un timeout de 10 segundos para mejorar rendimiento
+    console.log("[detect-plagiarism] Iniciando búsquedas en paralelo");
     const results = await Promise.allSettled(
       searchPromises.map(promise => 
         Promise.race([
@@ -69,11 +76,14 @@ serve(async (req) => {
       )
     );
     
+    console.log("[detect-plagiarism] Búsquedas completadas, procesando resultados");
+    
     // Procesar resultados - con optimizaciones de rendimiento
     const allSources = [];
     
     results.forEach((result, index) => {
       if (result.status === 'fulfilled') {
+        console.log(`[detect-plagiarism] Búsqueda ${index+1} exitosa:`, result.value.length, "resultados");
         result.value.forEach(source => {
           if (source.url && source.title) {
             // Calcular similitud con el fragmento de búsqueda
@@ -91,9 +101,11 @@ serve(async (req) => {
           }
         });
       } else {
-        console.error(`Error en búsqueda ${index}:`, result.reason);
+        console.error(`[detect-plagiarism] Error en búsqueda ${index}:`, result.reason);
       }
     });
+    
+    console.log("[detect-plagiarism] Fuentes encontradas (antes de filtrar):", allSources.length);
     
     // Eliminar duplicados por URL usando Set para mayor eficiencia
     const uniqueUrls = new Set();
@@ -102,6 +114,8 @@ serve(async (req) => {
       uniqueUrls.add(source.url);
       return true;
     });
+    
+    console.log("[detect-plagiarism] Fuentes únicas:", uniqueSources.length);
     
     // Ordenar por porcentaje de coincidencia
     const sortedSources = uniqueSources.sort((a, b) => b.match_percentage - a.match_percentage);
@@ -114,33 +128,40 @@ serve(async (req) => {
       ? Math.round(topSources.reduce((sum, s) => sum + s.match_percentage, 0) / topSources.length)
       : 0;
     
+    console.log("[detect-plagiarism] Porcentaje de plagio calculado:", plagiarismPercentage);
+    
     // Analizar patrones de IA
     const aiAnalysis = detectAIPatterns(text);
+    console.log("[detect-plagiarism] Probabilidad de IA calculada:", aiAnalysis.score);
 
     // Devolver resultado
+    const response = {
+      plagiarism_percentage: plagiarismPercentage,
+      ai_generated_probability: aiAnalysis.score,
+      sources: topSources,
+      document_content: text.substring(0, 1000) + (text.length > 1000 ? '...' : ''),
+      analyzed_content: textFragments.map(fragment => ({
+        text: fragment,
+        is_plagiarized: topSources.some(source => 
+          calculateSimilarity(fragment, source.snippet || '') > 50
+        )
+      })),
+      ai_analysis_details: {
+        confidenceScore: aiAnalysis.score,
+        features: aiAnalysis.patterns
+      }
+    };
+    
+    console.log("[detect-plagiarism] Respuesta completa generada");
+    
     return new Response(
-      JSON.stringify({
-        plagiarism_percentage: plagiarismPercentage,
-        ai_generated_probability: aiAnalysis.score,
-        sources: topSources,
-        document_content: text.substring(0, 1000) + (text.length > 1000 ? '...' : ''),
-        analyzed_content: textFragments.map(fragment => ({
-          text: fragment,
-          is_plagiarized: topSources.some(source => 
-            calculateSimilarity(fragment, source.snippet || '') > 50
-          )
-        })),
-        ai_analysis_details: {
-          confidenceScore: aiAnalysis.score,
-          features: aiAnalysis.patterns
-        }
-      }),
+      JSON.stringify(response),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   } catch (error) {
-    console.error("Error en función detect-plagiarism:", error);
+    console.error("[detect-plagiarism] Error:", error);
     
     return new Response(
       JSON.stringify({ 

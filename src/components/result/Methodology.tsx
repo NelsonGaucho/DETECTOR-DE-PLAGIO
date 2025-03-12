@@ -10,7 +10,7 @@ const Methodology = () => {
       </h3>
       
       <p className="text-muted-foreground mb-4">
-        El sistema utiliza exclusivamente búsquedas en Google y Google Scholar para un análisis completo:
+        El sistema utiliza <strong>exclusivamente</strong> búsquedas en Google y Google Scholar para un análisis completo:
       </p>
       
       <div className="space-y-6">
@@ -23,7 +23,7 @@ const Methodology = () => {
             <li>Extracción de texto del documento subido</li>
             <li>Búsqueda de fragmentos en Google y Google Scholar</li>
             <li>Comparación con fuentes encontradas en Internet</li>
-            <li>Algoritmos de similitud (Jaccard, Levenshtein, Cosine)</li>
+            <li>Algoritmos de similitud para detectar coincidencias</li>
             <li>Cálculo de porcentajes y generación de informe</li>
           </ol>
         </div>
@@ -48,8 +48,8 @@ const Methodology = () => {
             Fuentes consultadas
           </h4>
           <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-2">
-            <li>Google Search: Búsqueda general en Internet</li>
-            <li>Google Scholar: Artículos científicos y académicos</li>
+            <li><strong>Google Search:</strong> Búsqueda general en Internet</li>
+            <li><strong>Google Scholar:</strong> Artículos científicos y académicos</li>
           </ul>
         </div>
       </div>

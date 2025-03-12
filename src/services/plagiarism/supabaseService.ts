@@ -14,23 +14,23 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  */
 export const analyzePlagiarismWithSupabase = async (text: string): Promise<PlagiarismResult> => {
   try {
+    console.log("INICIO: Analizando documento con Supabase Edge Function (Google + Google Scholar)");
+    
     toast.loading("Analizando documento con fuentes reales...", {
       id: "supabaseAnalysis",
     });
 
-    console.log("Enviando texto para análisis con detect-plagiarism Edge Function");
-    
     // Llamar a la función Edge de Supabase que usa Google y Google Scholar
     const { data, error } = await supabase.functions.invoke('detect-plagiarism', {
       body: { text },
     });
 
     if (error) {
-      console.error("Error en el servicio detect-plagiarism:", error);
+      console.error("ERROR en el servicio detect-plagiarism:", error);
       throw new Error(`Error en el servicio de búsqueda: ${error.message}`);
     }
 
-    console.log("Respuesta de detect-plagiarism recibida:", data);
+    console.log("ÉXITO: Respuesta de detect-plagiarism recibida:", data);
     
     toast.success("Análisis completado", {
       id: "supabaseAnalysis",
