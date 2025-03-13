@@ -21,10 +21,11 @@ const Methodology = () => {
           </h4>
           <ol className="space-y-2 list-decimal list-inside text-muted-foreground ml-2">
             <li>Extracción de texto del documento subido</li>
-            <li>Búsqueda de fragmentos en Google y Google Scholar</li>
+            <li>División en fragmentos significativos para análisis</li>
+            <li>Búsqueda de fragmentos en Google y Google Scholar con técnicas anti-bloqueo</li>
             <li>Comparación con fuentes encontradas en Internet</li>
-            <li>Algoritmos de similitud para detectar coincidencias</li>
-            <li>Cálculo de porcentajes y generación de informe</li>
+            <li>Algoritmos de similitud de texto para detectar coincidencias</li>
+            <li>Cálculo de porcentajes de plagio basado en coincidencias</li>
           </ol>
         </div>
         
@@ -35,9 +36,10 @@ const Methodology = () => {
           </h4>
           <ol className="space-y-2 list-decimal list-inside text-muted-foreground ml-2">
             <li>Análisis estadístico de patrones lingüísticos</li>
-            <li>Evaluación de estructuras de texto</li>
+            <li>Evaluación de estructuras de texto y complejidad léxica</li>
+            <li>Medición de entropía y variabilidad en el texto</li>
             <li>Detección de patrones comunes en textos generados por IA</li>
-            <li>Análisis de distribución de palabras</li>
+            <li>Análisis de distribución y frecuencia de palabras</li>
             <li>Asignación de probabilidad de generación por IA</li>
           </ol>
         </div>
@@ -45,11 +47,14 @@ const Methodology = () => {
         <div>
           <h4 className="font-medium flex items-center mb-2">
             <Database className="mr-2 h-4 w-4 text-primary" />
-            Fuentes consultadas
+            Técnicas avanzadas
           </h4>
           <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-2">
-            <li><strong>Google Search:</strong> Búsqueda general en Internet</li>
-            <li><strong>Google Scholar:</strong> Artículos científicos y académicos</li>
+            <li><strong>Web Scraping:</strong> Análisis directo de fuentes web</li>
+            <li><strong>Algoritmos de similitud:</strong> Comparación de textos para encontrar coincidencias</li>
+            <li><strong>Rotación de user-agents:</strong> Evita bloqueos en motores de búsqueda</li>
+            <li><strong>Aleatorización de consultas:</strong> Optimiza búsquedas preservando contexto</li>
+            <li><strong>Análisis de fallback:</strong> Sistema alternativo si falla el método principal</li>
           </ul>
         </div>
       </div>
@@ -58,9 +63,9 @@ const Methodology = () => {
         <p className="text-sm text-blue-800 dark:text-blue-200 flex items-start">
           <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
           <span>
-            Este sistema utiliza técnicas de scraping web para buscar en fuentes públicas.
-            Los resultados dependen directamente de las búsquedas en Google y Google Scholar.
-            La precisión puede variar según la disponibilidad de las fuentes.
+            Este sistema utiliza técnicas de web scraping ético para buscar en fuentes públicas,
+            sin depender de APIs de pago. La precisión depende de la disponibilidad de las fuentes
+            y la calidad de las consultas realizadas.
           </span>
         </p>
       </div>

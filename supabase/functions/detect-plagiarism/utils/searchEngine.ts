@@ -1,6 +1,7 @@
 
 // Search engine utilities for Google and Google Scholar with improved anti-blocking techniques
 import { corsHeaders } from "./corsHeaders.ts";
+import { load } from "https://esm.sh/cheerio@1.0.0-rc.12";
 
 /**
  * Perform a search on Google or Google Scholar and return the results
@@ -89,33 +90,29 @@ export async function searchGoogle(query: string, isScholar = false) {
     const html = await response.text();
     console.log(`[searchEngine] Respuesta recibida: ${html.length} caracteres`);
     
-    // Extraer URLs y títulos de los resultados con regex mejorados
+    // Usar cheerio para analizar el HTML
+    const $ = load(html);
     const results = [];
     
-    // Extraer enlaces con expresiones regulares más robustas
-    // Para Google Scholar
+    // Extraer resultados según el tipo de búsqueda
     if (isScholar) {
-      // Extraer resultados usando un regex más tolerante a cambios en el HTML
-      const scholarEntryRegex = /<div class="gs_ri">([\s\S]*?)<\/div>\s*<\/div>/g;
-      let scholarEntry;
-      
-      while ((scholarEntry = scholarEntryRegex.exec(html)) !== null && results.length < 10) {
-        const entryHtml = scholarEntry[1];
+      // Extraer resultados de Google Scholar
+      $(".gs_ri").each((i, element) => {
+        if (results.length >= 10) return false; // Limitar a 10 resultados
         
-        // Extraer título y URL
-        const titleMatch = /<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(entryHtml);
-        if (titleMatch) {
-          const url = titleMatch[1].startsWith('/scholar') 
-            ? `https://scholar.google.com${titleMatch[1]}`
-            : titleMatch[1];
-          const title = titleMatch[2].replace(/<\/?[^>]+(>|$)/g, "").trim();
-          
-          // Extraer fragmento/snippet
-          const snippetMatch = /<div class="gs_rs">([\s\S]*?)<\/div>/i.exec(entryHtml);
-          const snippet = snippetMatch 
-            ? snippetMatch[1].replace(/<\/?[^>]+(>|$)/g, "").trim()
-            : "";
-          
+        const titleElement = $(element).find("h3 a");
+        const title = titleElement.text().trim();
+        let url = titleElement.attr("href") || "";
+        
+        // Formatear URL
+        if (url.startsWith('/scholar')) {
+          url = `https://scholar.google.com${url}`;
+        }
+        
+        // Extraer snippet
+        const snippet = $(element).find(".gs_rs").text().trim();
+        
+        if (title && url) {
           results.push({
             url,
             title,
@@ -123,59 +120,40 @@ export async function searchGoogle(query: string, isScholar = false) {
             source: "Google Scholar"
           });
         }
-      }
-    } 
-    // Para Google normal
-    else {
-      // Extraer resultados de búsqueda normal
-      const googleEntryRegex = /<div class="g">([\s\S]*?)(?:<div class="g">|<\/div>\s*<div id="botn")/g;
-      let googleEntry;
-      
-      while ((googleEntry = googleEntryRegex.exec(html)) !== null && results.length < 10) {
-        const entryHtml = googleEntry[1];
+      });
+    } else {
+      // Extraer resultados de Google normal
+      $("div.g").each((i, element) => {
+        if (results.length >= 10) return false; // Limitar a 10 resultados
         
-        // Extraer título y URL - más tolerante a cambios en la estructura HTML
-        const titleUrlRegex = /<a[^>]*href="([^"#]*?)(?:#[^"]*?)?"[^>]*>([\s\S]*?)<\/a>/i;
-        const titleMatch = titleUrlRegex.exec(entryHtml);
+        const titleElement = $(element).find("h3");
+        if (!titleElement.length) return; // Continuar si no hay título
         
-        if (titleMatch) {
-          const rawUrl = titleMatch[1];
-          
-          // Limpiar URL si contiene parámetros de Google
-          let url = rawUrl;
-          if (url.startsWith('/url?')) {
-            const urlParams = new URLSearchParams(url.substring(5));
-            url = urlParams.get('q') || url;
-          }
-          
-          // Limpiar título de etiquetas HTML
-          const title = titleMatch[2].replace(/<\/?[^>]+(>|$)/g, "").trim();
-          
-          // Extraer snippet/descripción
-          const snippetRegex = /<div class="[^"]*?"[^>]*?>([\s\S]*?)<\/div>/g;
-          let snippet = "";
-          let snippetMatch;
-          
-          // Buscar el primer <div> después del título que probablemente sea el snippet
-          while ((snippetMatch = snippetRegex.exec(entryHtml)) !== null) {
-            const potentialSnippet = snippetMatch[1].replace(/<\/?[^>]+(>|$)/g, "").trim();
-            if (potentialSnippet.length > 20 && potentialSnippet !== title) {
-              snippet = potentialSnippet;
-              break;
-            }
-          }
-          
-          // Solo añadir si tenemos una URL válida
-          if (url && url.startsWith('http') && title) {
-            results.push({
-              url,
-              title,
-              snippet,
-              source: "Google"
-            });
-          }
+        const title = titleElement.text().trim();
+        if (!title) return; // Continuar si el título está vacío
+        
+        // Encontrar el enlace
+        const linkElement = titleElement.closest("a");
+        let url = linkElement.attr("href") || "";
+        
+        // Limpiar URL
+        if (url.startsWith('/url?')) {
+          const urlParams = new URLSearchParams(url.substring(5));
+          url = urlParams.get('q') || url;
         }
-      }
+        
+        // Extraer snippet
+        const snippet = $(element).find(".VwiC3b").text().trim();
+        
+        if (title && url && url.startsWith('http')) {
+          results.push({
+            url,
+            title,
+            snippet,
+            source: "Google"
+          });
+        }
+      });
     }
     
     console.log(`[searchEngine] Resultados encontrados: ${results.length}`);
