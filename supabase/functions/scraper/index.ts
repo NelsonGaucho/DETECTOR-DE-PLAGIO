@@ -1,7 +1,7 @@
 
-// Supabase Edge Function para scraping de Google sin usar APIs de pago
+// Supabase Edge Function para scraping de Google evitando bloqueos
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { load } from "https://esm.sh/cheerio@1.0.0-rc.12";
+import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 
 // Headers CORS para permitir peticiones cross-origin
 const corsHeaders = {
@@ -9,7 +9,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Array expandido de User-Agents para mejor rotación y evitar bloqueos
+// Array expandido de User-Agents modernos para mejor rotación y evitar bloqueos
 const userAgents = [
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3 Safari/605.1.15",
@@ -19,18 +19,36 @@ const userAgents = [
   "Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1",
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0",
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 OPR/108.0.0.0"
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 OPR/108.0.0.0",
+  "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0"
 ];
 
 // Array de lenguajes para rotar
-const languages = ["es-ES,es", "en-US,en", "en-GB,en", "es-MX,es", "es-AR,es"];
+const languages = ["es-ES,es;q=0.9", "en-US,en;q=0.8", "en-GB,en;q=0.8", "es-MX,es;q=0.9", "es-AR,es;q=0.9"];
 
-// Lista de proxies gratuitos (estos suelen cambiar frecuentemente, requerirían actualización periódica)
-// Se recomienda usar un servicio de proxy pagado para producción
-const freeProxies = [
-  // La lista está vacía porque los proxies gratuitos son inestables
-  // Si se desea implementar, se pueden agregar URLs de proxies aquí
+// Navegadores simulados para los headers
+const browserVersions = [
+  { name: "Chrome", version: "123.0.0.0", platform: "Windows NT 10.0; Win64; x64" },
+  { name: "Firefox", version: "124.0", platform: "Windows NT 10.0; Win64; x64" },
+  { name: "Safari", version: "17.4", platform: "Macintosh; Intel Mac OS X 14_4" },
+  { name: "Edge", version: "123.0.0.0", platform: "Windows NT 10.0; Win64; x64" }
 ];
+
+// Lista de cookies de consentimiento para evitar páginas de consentimiento
+const consentCookies = [
+  "CONSENT=YES+cb.20220301-11-p0.en+FX+421; SID=RghYml23wnMFy_ZI65cDblahblah;",
+  "CONSENT=PENDING+123; NID=511=mKcW6tmAZfs6OAblahblah;",
+  "CONSENT=YES+; SOCS=CAESEwgUEg; OTZ=12345678_78_90_123456",
+  "CONSENT=YES+; SIDCC=ABTdFD43Blahlblah; APISID=somedata/someotherdata"
+];
+
+// Servicio de proxy para acceder a través de diferentes IPs
+const proxyServices = {
+  scraperApi: "http://api.scraperapi.com?api_key={{API_KEY}}&url={{URL}}",
+  scrapeNinja: "https://api.scrapeninja.net/scrape?api_key={{API_KEY}}&url={{URL}}",
+  proxyDefault: "https://proxy.scrapeops.io/v1/?api_key={{API_KEY}}&url={{URL}}&residential=true"
+};
 
 serve(async (req) => {
   // Manejar peticiones preflight CORS
@@ -39,10 +57,11 @@ serve(async (req) => {
   }
 
   try {
-    // Obtener la query de los parámetros de la URL
+    // Obtener parámetros de la URL
     const url = new URL(req.url);
     const query = url.searchParams.get("query");
-    const useProxy = url.searchParams.get("proxy") === "true";
+    const proxyApiKey = url.searchParams.get("proxyApiKey");
+    const proxyService = url.searchParams.get("proxyService") || "default"; 
     const debug = url.searchParams.get("debug") === "true";
 
     if (!query) {
@@ -63,7 +82,7 @@ serve(async (req) => {
     await new Promise(resolve => setTimeout(resolve, delayMs));
     
     // Realizar scraping de Google
-    const results = await scrapeGoogle(query, useProxy, debug);
+    const results = await scrapeGoogle(query, proxyApiKey, proxyService, debug);
     
     // Devolver resultados en formato JSON
     return new Response(
@@ -97,15 +116,22 @@ serve(async (req) => {
 /**
  * Función para hacer scraping de los resultados de búsqueda de Google
  * @param query Consulta de búsqueda
- * @param useProxy Indica si se debe usar un proxy (experimental)
+ * @param proxyApiKey API key para el servicio de proxy (opcional)
+ * @param proxyService Servicio de proxy a utilizar (opcional)
  * @param debug Indica si se debe devolver información de depuración
  */
-async function scrapeGoogle(query: string, useProxy = false, debug = false): Promise<any[]> {
-  // Seleccionar un User-Agent aleatorio
+async function scrapeGoogle(query: string, proxyApiKey?: string|null, proxyService?: string, debug = false): Promise<any[]> {
+  // Seleccionar un navegador simulado aleatorio
+  const browser = browserVersions[Math.floor(Math.random() * browserVersions.length)];
+  
+  // Construir un User-Agent avanzado basado en el navegador seleccionado
   const userAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
   
   // Seleccionar un lenguaje aleatorio
   const language = languages[Math.floor(Math.random() * languages.length)];
+  
+  // Seleccionar cookies de consentimiento aleatorias
+  const cookies = consentCookies[Math.floor(Math.random() * consentCookies.length)];
   
   // Añadir variación a la consulta para evitar patrones detectables
   const searchQuery = addQueryVariation(query);
@@ -114,7 +140,7 @@ async function scrapeGoogle(query: string, useProxy = false, debug = false): Pro
   const encodedQuery = encodeURIComponent(searchQuery);
   
   // Agregar parámetros aleatorios para simular un navegador real
-  const randomNum = Math.floor(Math.random() * 100);
+  const randomNum = Math.floor(Math.random() * 10000);
   const searchUrl = `https://www.google.com/search?q=${encodedQuery}&hl=es&gl=es&pws=0&source=hp&ei=a${randomNum}b&start=0`;
   
   console.log(`[scraper] Consultando URL: ${searchUrl}`);
@@ -123,7 +149,7 @@ async function scrapeGoogle(query: string, useProxy = false, debug = false): Pro
   try {
     // Configurar timeout para evitar bloqueos en la petición
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos de timeout
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 segundos de timeout
     
     // Crear headers personalizados que parezcan de un navegador real
     const headers = {
@@ -140,10 +166,10 @@ async function scrapeGoogle(query: string, useProxy = false, debug = false): Pro
       "Cache-Control": "max-age=0",
       "Referer": "https://www.google.com/",
       "DNT": "1",
-      "Sec-CH-UA": `"Chromium";v="122", "Google Chrome";v="122", "Not(A:Brand";v="24"`,
+      "Sec-CH-UA": `"${browser.name}";v="${browser.version}", "Not(A:Brand";v="24"`,
       "Sec-CH-UA-Mobile": "?0",
-      "Sec-CH-UA-Platform": `"${Math.random() > 0.5 ? 'Windows' : 'macOS'}"`,
-      "Cookie": ""
+      "Sec-CH-UA-Platform": `"${browser.platform.split(';')[0].trim()}"`,
+      "Cookie": cookies
     };
     
     // Realizar la petición a Google
@@ -153,18 +179,43 @@ async function scrapeGoogle(query: string, useProxy = false, debug = false): Pro
       redirect: "follow"
     };
     
-    // Agregar proxy si está habilitado (experimental)
+    // Usar un servicio de proxy si se proporciona una API key
     let response;
+    let finalUrl = searchUrl;
     
-    if (useProxy && freeProxies.length > 0) {
-      // Seleccionar un proxy aleatorio
-      const proxy = freeProxies[Math.floor(Math.random() * freeProxies.length)];
-      console.log(`[scraper] Usando proxy: ${proxy}`);
+    if (proxyApiKey) {
+      let proxyUrl;
       
-      // Esta implementación requeriría un servicio de proxy compatible con Deno
-      // Por ahora, fallback a petición sin proxy
-      response = await fetch(searchUrl, options);
+      // Seleccionar el servicio de proxy según el parámetro
+      switch(proxyService) {
+        case "scraperapi":
+          proxyUrl = proxyServices.scraperApi;
+          break;
+        case "scrapeninja":
+          proxyUrl = proxyServices.scrapeNinja;
+          break;
+        default:
+          proxyUrl = proxyServices.proxyDefault;
+      }
+      
+      // Reemplazar placeholders con valores reales
+      finalUrl = proxyUrl
+        .replace("{{API_KEY}}", proxyApiKey)
+        .replace("{{URL}}", encodeURIComponent(searchUrl));
+      
+      console.log(`[scraper] Usando proxy: ${proxyService}`);
+      
+      // Realizar petición a través del proxy
+      response = await fetch(finalUrl, {
+        ...options,
+        // Algunos servicios de proxy requieren estos headers específicos
+        headers: {
+          "User-Agent": userAgent,
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        }
+      });
     } else {
+      // Petición directa a Google
       response = await fetch(searchUrl, options);
     }
     
@@ -193,189 +244,260 @@ async function scrapeGoogle(query: string, useProxy = false, debug = false): Pro
       console.log(`[scraper] Primeros 1000 caracteres del HTML: ${html.substring(0, 1000)}`);
     }
     
-    // Usar cheerio para parsear el HTML y extraer los resultados
-    const $ = load(html);
+    // Usar Deno DOM para parsear el HTML y extraer los resultados
+    const document = new DOMParser().parseFromString(html, "text/html");
+    if (!document) {
+      throw new Error("No se pudo parsear el HTML");
+    }
+    
     const results = [];
     
-    // Depuración: Imprimir estructura básica de la página para analizar
-    if (debug) {
-      console.log(`[scraper] Títulos h3 encontrados: ${$('h3').length}`);
-      $('h3').each((i, el) => {
-        console.log(`[scraper] Título ${i}: "${$(el).text().trim()}"`);
-      });
-    }
-    
-    // Múltiples enfoques para extraer resultados, adaptándonos a la estructura actual de Google
-    
-    // Enfoque 1: Selectores múltiples para resultados orgánicos
+    // Enfoque 1: Extracción directa de resultados de búsqueda usando selectores modernos
     console.log("[scraper] Intentando extraer resultados con enfoque 1");
-    const mainResults = $('div.g, div[data-hveid], div.MjjYud, div.Gx5Zad, div.tF2Cxc, div.yuRUbf')
-      .filter(function() {
-        return $(this).find('h3').length > 0;
-      });
+    
+    // Identificar resultados orgánicos usando los selectores actuales de Google (2024)
+    const searchResults = document.querySelectorAll('div.g, div[data-hveid], div.MjjYud, div.Gx5Zad, div.tF2Cxc, div.yuRUbf');
     
     if (debug) {
-      console.log(`[scraper] Enfoque 1 encontró ${mainResults.length} resultados posibles`);
+      console.log(`[scraper] Encontrados ${searchResults.length} posibles resultados con enfoque 1`);
     }
     
-    // Si encontramos resultados con enfoque 1, los procesamos
-    if (mainResults.length > 0) {
-      mainResults.each(function(index, element) {
+    // Iterar sobre cada posible resultado de búsqueda
+    for (let i = 0; i < searchResults.length; i++) {
+      const result = searchResults[i];
+      
+      // Buscar el título (h3)
+      const titleElement = result.querySelector('h3');
+      if (!titleElement) continue;
+      
+      const title = titleElement.textContent.trim();
+      if (!title || title.includes("People also ask")) continue;
+      
+      // Buscar el enlace (a)
+      const link = result.querySelector('a[href^="http"], a[href^="/url"]');
+      if (!link) continue;
+      
+      let url = link.getAttribute('href') || '';
+      
+      // Limpiar URL si es del formato de Google redirect
+      if (url.startsWith('/url?') || url.includes('/url?')) {
         try {
-          const titleElement = $(element).find('h3').first();
-          const title = titleElement.text().trim();
-          
-          if (!title) return;
-          
-          // Buscar la URL en varios niveles
-          let url = '';
-          const linkElement = $(element).find('a[href^="http"], a[href^="/url"]').first();
-          
-          if (linkElement.length > 0) {
-            url = linkElement.attr('href') || '';
-            
-            // Limpiar URL si es del formato de Google redirect
-            if (url.startsWith('/url?') || url.includes('/url?')) {
-              try {
-                if (url.startsWith('/')) {
-                  url = 'https://www.google.com' + url;
-                }
-                const urlObj = new URL(url);
-                const cleanUrl = urlObj.searchParams.get('q') || urlObj.searchParams.get('url');
-                if (cleanUrl) url = cleanUrl;
-              } catch (e) {
-                console.error(`[scraper] Error al limpiar URL: ${e}`);
-              }
-            }
+          if (url.startsWith('/')) {
+            url = 'https://www.google.com' + url;
           }
-          
-          // Extraer snippet
-          const snippetElement = $(element).find('.VwiC3b, .lyLwlc, .IsZvec, .lEBKkf, .yXK7lf, .MUxGbd').first();
-          const snippet = snippetElement.text().trim();
-          
-          if (title && url && url.startsWith('http') && !title.includes("People also ask")) {
-            results.push({
-              title,
-              url,
-              snippet: snippet || "",
-              position: index + 1
-            });
-          }
-        } catch (err) {
-          console.error(`[scraper] Error al procesar resultado ${index}:`, err);
+          const urlObj = new URL(url);
+          const cleanUrl = urlObj.searchParams.get('q') || urlObj.searchParams.get('url');
+          if (cleanUrl) url = cleanUrl;
+        } catch (e) {
+          console.error(`[scraper] Error al limpiar URL: ${e}`);
         }
-      });
+      }
+      
+      // Solo procesar URLs válidas
+      if (!url.startsWith('http')) continue;
+      
+      // Buscar el snippet
+      let snippet = '';
+      const snippetElement = result.querySelector('.VwiC3b, .lyLwlc, .IsZvec');
+      if (snippetElement) {
+        snippet = snippetElement.textContent.trim();
+      }
+      
+      // Añadir resultado si no está duplicado
+      if (!results.some(r => r.title === title || r.url === url)) {
+        results.push({
+          title,
+          url,
+          snippet: snippet || "",
+          position: results.length + 1
+        });
+      }
+      
+      // Limitar a 10 resultados
+      if (results.length >= 10) break;
     }
     
-    // Enfoque 2: Si no encontramos resultados con el primer enfoque
+    // Si el primer enfoque no dio resultados, probar con el segundo enfoque
     if (results.length === 0) {
       console.log("[scraper] Intentando extraer resultados con enfoque 2");
-      $('a').each(function(index, element) {
-        try {
-          const href = $(element).attr('href');
+      
+      // Buscar todos los h3 en la página que probablemente sean títulos de resultados
+      const h3Elements = document.querySelectorAll('h3');
+      
+      if (debug) {
+        console.log(`[scraper] Encontrados ${h3Elements.length} elementos h3`);
+      }
+      
+      for (let i = 0; i < h3Elements.length; i++) {
+        const h3 = h3Elements[i];
+        const title = h3.textContent.trim();
+        
+        if (!title || title.includes("People also ask")) continue;
+        
+        // Buscar el enlace más cercano (ancestro o hermano)
+        let linkElement = null;
+        let current = h3;
+        
+        // Buscar hacia arriba hasta 3 niveles
+        for (let j = 0; j < 3; j++) {
+          const parent = current.parentElement;
+          if (!parent) break;
           
-          // Solo procesar enlaces que puedan ser resultados de búsqueda
-          if (!href || (!href.startsWith('http') && !href.startsWith('/url?'))) return;
+          // Buscar enlace en el padre
+          linkElement = parent.querySelector('a[href^="http"], a[href^="/url"]');
+          if (linkElement) break;
           
-          // Buscar una etiqueta h3 dentro del enlace o cerca
-          const titleElement = $(element).find('h3').first();
-          if (!titleElement.length) return;
-          
-          const title = titleElement.text().trim();
-          if (!title || title.includes("People also ask") || title.includes("Featured snippet")) return;
-          
-          let url = href;
-          
-          // Limpiar URL si es del formato de Google redirect
-          if (url.startsWith('/url?') || url.includes('/url?')) {
-            try {
-              if (url.startsWith('/')) {
-                url = 'https://www.google.com' + url;
-              }
-              const urlObj = new URL(url);
-              const cleanUrl = urlObj.searchParams.get('q') || urlObj.searchParams.get('url');
-              if (cleanUrl) url = cleanUrl;
-            } catch (e) {
-              console.error(`[scraper] Error al limpiar URL: ${e}`);
-            }
-          }
-          
-          // Buscar un snippet cercano al elemento de título
-          const parentElement = titleElement.parent().parent();
-          const snippetElement = parentElement.find('div').not(function() {
-            return $(this).find('h3').length > 0;
-          }).first();
-          
-          const snippet = snippetElement.text().trim();
-          
-          // Solo añadir si tenemos título y URL
-          if (title && url && url.startsWith('http') && !results.some(r => r.title === title)) {
-            results.push({
-              title,
-              url,
-              snippet: snippet || "",
-              position: results.length + 1
-            });
-          }
-        } catch (err) {
-          console.error(`[scraper] Error al procesar enlace ${index}:`, err);
+          current = parent;
         }
-      });
-    }
-    
-    // Enfoque 3: Último recurso, usar selectores muy genéricos
-    if (results.length === 0) {
-      console.log("[scraper] Intentando extraer resultados con enfoque 3 (genérico)");
-      $('*').each(function(index, element) {
-        try {
-          const h3 = $(element).find('h3').first();
-          if (!h3.length) return;
-          
-          const title = h3.text().trim();
-          if (!title || title.includes("People also ask")) return;
-          
-          // Buscar el enlace más cercano
-          const anchor = $(element).find('a[href]').first();
-          if (!anchor.length) return;
-          
-          let url = anchor.attr('href') || '';
-          
-          // Limpiar URL
-          if (url.startsWith('/url?') || url.includes('/url?')) {
-            try {
-              if (url.startsWith('/')) {
-                url = 'https://www.google.com' + url;
-              }
-              const urlObj = new URL(url);
-              const cleanUrl = urlObj.searchParams.get('q') || urlObj.searchParams.get('url');
-              if (cleanUrl) url = cleanUrl;
-            } catch (e) {
-              console.error(`[scraper] Error al limpiar URL: ${e}`);
+        
+        if (!linkElement) continue;
+        
+        let url = linkElement.getAttribute('href') || '';
+        
+        // Limpiar URL de Google
+        if (url.startsWith('/url?') || url.includes('/url?')) {
+          try {
+            if (url.startsWith('/')) {
+              url = 'https://www.google.com' + url;
+            }
+            const urlObj = new URL(url);
+            const cleanUrl = urlObj.searchParams.get('q') || urlObj.searchParams.get('url');
+            if (cleanUrl) url = cleanUrl;
+          } catch (e) {
+            console.error(`[scraper] Error al limpiar URL: ${e}`);
+          }
+        }
+        
+        // Solo procesar URLs válidas
+        if (!url.startsWith('http')) continue;
+        
+        // Buscar snippet
+        let snippet = '';
+        const parent = h3.parentElement;
+        if (parent) {
+          // Buscar elementos que puedan contener el snippet
+          const possibleSnippets = parent.querySelectorAll('div:not(:has(h3))');
+          for (let j = 0; j < possibleSnippets.length; j++) {
+            const text = possibleSnippets[j].textContent.trim();
+            if (text && text !== title && text.length > 20) {
+              snippet = text;
+              break;
             }
           }
-          
-          // Solo considerar URLs válidas
-          if (!url.startsWith('http')) return;
-          
-          // Evitar duplicados
-          if (results.some(r => r.title === title || r.url === url)) return;
-          
-          // Buscar snippet
-          const snippet = $(element).text().replace(title, '').trim().substring(0, 200);
-          
+        }
+        
+        // Añadir resultado si no está duplicado
+        if (!results.some(r => r.title === title || r.url === url)) {
           results.push({
             title,
             url,
             snippet: snippet || "",
             position: results.length + 1
           });
-          
-          // Limitar a 10 resultados como máximo
-          if (results.length >= 10) return false;
-        } catch (err) {
-          console.error(`[scraper] Error en enfoque genérico para elemento ${index}:`, err);
         }
-      });
+        
+        // Limitar a 10 resultados
+        if (results.length >= 10) break;
+      }
+    }
+    
+    // Tercer enfoque (última oportunidad): Búsqueda genérica
+    if (results.length === 0) {
+      console.log("[scraper] Intentando extracción con enfoque 3 (genérico)");
+      
+      // Buscar todos los enlaces en la página
+      const links = document.querySelectorAll('a[href^="http"], a[href^="/url"]');
+      
+      for (let i = 0; i < links.length; i++) {
+        const link = links[i];
+        let url = link.getAttribute('href') || '';
+        
+        // Ignorar enlaces que claramente no son resultados
+        if (url.includes('google.com/search') || 
+            url.includes('accounts.google') || 
+            url.includes('support.google')) {
+          continue;
+        }
+        
+        // Limpiar URL de Google
+        if (url.startsWith('/url?') || url.includes('/url?')) {
+          try {
+            if (url.startsWith('/')) {
+              url = 'https://www.google.com' + url;
+            }
+            const urlObj = new URL(url);
+            const cleanUrl = urlObj.searchParams.get('q') || urlObj.searchParams.get('url');
+            if (cleanUrl) url = cleanUrl;
+          } catch (e) {
+            console.error(`[scraper] Error al limpiar URL: ${e}`);
+            continue;
+          }
+        }
+        
+        // Solo procesar URLs válidas
+        if (!url.startsWith('http')) continue;
+        
+        // Buscar texto que pueda ser el título
+        let title = '';
+        const linkText = link.textContent.trim();
+        if (linkText && linkText.length > 5 && linkText.length < 100) {
+          title = linkText;
+        } else {
+          // Buscar un elemento cercano que pueda contener el título
+          let current = link;
+          for (let j = 0; j < 3; j++) {
+            const parent = current.parentElement;
+            if (!parent) break;
+            
+            const possibleTitle = parent.querySelector('h3, h2, strong, b');
+            if (possibleTitle) {
+              title = possibleTitle.textContent.trim();
+              break;
+            }
+            
+            current = parent;
+          }
+        }
+        
+        // Si no encontramos título, usar la URL como título
+        if (!title) {
+          try {
+            const urlObj = new URL(url);
+            title = urlObj.hostname.replace('www.', '');
+          } catch {
+            title = url.substring(0, 30) + '...';
+          }
+        }
+        
+        // Buscar texto que pueda ser el snippet
+        let snippet = '';
+        let current = link;
+        for (let j = 0; j < 3; j++) {
+          const parent = current.parentElement;
+          if (!parent) break;
+          
+          const text = parent.textContent.trim().replace(title, '').replace(linkText, '').trim();
+          if (text && text.length > 20) {
+            snippet = text.substring(0, 200);
+            break;
+          }
+          
+          current = parent;
+        }
+        
+        // Añadir resultado si no está duplicado
+        if (!results.some(r => r.url === url)) {
+          results.push({
+            title,
+            url,
+            snippet: snippet || "",
+            position: results.length + 1
+          });
+        }
+        
+        // Limitar a 10 resultados
+        if (results.length >= 10) break;
+      }
     }
 
     console.log(`[scraper] Se encontraron ${results.length} resultados`);
@@ -383,27 +505,26 @@ async function scrapeGoogle(query: string, useProxy = false, debug = false): Pro
     // Si no encontramos resultados pero tampoco hubo errores, podría ser que Google cambió su estructura
     if (results.length === 0 && !html.includes("No results found")) {
       console.warn("[scraper] No se encontraron resultados, pero la página no muestra error de 'sin resultados'");
-      console.warn("[scraper] Es posible que Google haya cambiado su estructura HTML");
       
       if (debug) {
-        // Extraer y devolver información para ayudar a depurar
+        // Extraer y devolver información para depurar
         const debugInfo = {
           htmlLength: html.length,
-          titleTagContent: $('title').text(),
-          h1Tags: $('h1').map((i, el) => $(el).text().trim()).get(),
-          h3Count: $('h3').length,
-          linkCount: $('a[href]').length,
-          bodyClasses: $('body').attr('class')
+          titleTagContent: document.querySelector('title')?.textContent || '',
+          h1Tags: Array.from(document.querySelectorAll('h1')).map(h1 => h1.textContent.trim()),
+          h3Count: document.querySelectorAll('h3').length,
+          linkCount: document.querySelectorAll('a[href]').length,
+          bodyClasses: document.querySelector('body')?.getAttribute('class') || ''
         };
         
         console.log("[scraper] Información de depuración:", debugInfo);
         
-        // En modo depuración, devolver al menos algo de metainformación
+        // En modo depuración, devolver metainformación
         return [
           {
             title: "DEBUG INFO: No results found",
             url: searchUrl,
-            snippet: `HTML length: ${html.length}, Title: ${$('title').text()}, H3 count: ${$('h3').length}`,
+            snippet: `HTML length: ${html.length}, Title: ${document.querySelector('title')?.textContent || 'No title'}, H3 count: ${document.querySelectorAll('h3').length}`,
             position: 1,
             debugInfo
           }
