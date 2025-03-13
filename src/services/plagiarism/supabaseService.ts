@@ -16,7 +16,7 @@ export const searchWithScraper = async (query: string, source: string = "google"
     console.log(`Realizando búsqueda en ${source} para: ${query}`);
     
     const { data, error } = await supabase.functions.invoke('scrape-search', {
-      query: { query, source },
+      body: { query, source },
     });
 
     if (error) {
