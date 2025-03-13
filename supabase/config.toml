@@ -1,1 +1,7 @@
+
 project_id = "jsnclmwocfearleqtjkr"
+
+[api]
+# Configurar para que la función scraper no requiera autenticación
+[functions.scraper]
+verify_jwt = false
