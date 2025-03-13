@@ -1,3 +1,5 @@
 
+# supabase/functions/scraper/config.toml
+
 [api]
 invoke_auth = false
