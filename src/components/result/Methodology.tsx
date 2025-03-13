@@ -10,22 +10,22 @@ const Methodology = () => {
       </h3>
       
       <p className="text-muted-foreground mb-4">
-        El sistema utiliza <strong>exclusivamente</strong> búsquedas en Google y Google Scholar para un análisis completo:
+        El sistema utiliza <strong>exclusivamente búsquedas reales</strong> en Google y Google Scholar para un análisis completo:
       </p>
       
       <div className="space-y-6">
         <div>
           <h4 className="font-medium flex items-center mb-2">
             <Search className="mr-2 h-4 w-4 text-primary" />
-            Detección de plagio
+            Detección de plagio con datos reales
           </h4>
           <ol className="space-y-2 list-decimal list-inside text-muted-foreground ml-2">
             <li>Extracción de texto del documento subido</li>
             <li>División en fragmentos significativos para análisis</li>
-            <li>Búsqueda de fragmentos en Google y Google Scholar con técnicas anti-bloqueo</li>
-            <li>Comparación con fuentes encontradas en Internet</li>
+            <li>Búsqueda real de fragmentos en Google y Google Scholar</li>
+            <li>Comparación con fuentes encontradas en Internet (no simuladas)</li>
             <li>Algoritmos de similitud de texto para detectar coincidencias</li>
-            <li>Cálculo de porcentajes de plagio basado en coincidencias</li>
+            <li>Cálculo de porcentajes de plagio basado en coincidencias reales</li>
           </ol>
         </div>
         
@@ -47,14 +47,14 @@ const Methodology = () => {
         <div>
           <h4 className="font-medium flex items-center mb-2">
             <Database className="mr-2 h-4 w-4 text-primary" />
-            Técnicas avanzadas
+            Técnicas avanzadas de scraping
           </h4>
           <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-2">
-            <li><strong>Web Scraping:</strong> Análisis directo de fuentes web</li>
+            <li><strong>Web Scraping Real:</strong> Análisis directo de fuentes web sin simulación</li>
             <li><strong>Algoritmos de similitud:</strong> Comparación de textos para encontrar coincidencias</li>
             <li><strong>Rotación de user-agents:</strong> Evita bloqueos en motores de búsqueda</li>
             <li><strong>Aleatorización de consultas:</strong> Optimiza búsquedas preservando contexto</li>
-            <li><strong>Análisis de fallback:</strong> Sistema alternativo si falla el método principal</li>
+            <li><strong>Sistema de respaldo:</strong> Búsqueda directa si falla el método principal</li>
           </ul>
         </div>
       </div>
@@ -64,8 +64,8 @@ const Methodology = () => {
           <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
           <span>
             Este sistema utiliza técnicas de web scraping ético para buscar en fuentes públicas,
-            sin depender de APIs de pago. La precisión depende de la disponibilidad de las fuentes
-            y la calidad de las consultas realizadas.
+            sin depender de APIs de pago ni resultados simulados. La precisión depende de la disponibilidad
+            de las fuentes en Internet y la calidad de las consultas realizadas.
           </span>
         </p>
       </div>

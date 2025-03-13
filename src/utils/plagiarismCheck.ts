@@ -19,7 +19,7 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
       const timeout = setTimeout(() => {
         toast.error("La operación ha tardado demasiado. Intente con un archivo más pequeño.");
         reject(new Error("Operation timed out"));
-      }, 30000); // 30 segundos para el análisis completo
+      }, 60000); // 60 segundos para el análisis completo (aumentado para dar más tiempo)
       
       // Extract text from file first
       extractTextFromFile(file)
@@ -39,7 +39,11 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
             console.error("ERROR: Servicio Supabase falló:", error);
             clearTimeout(timeout);
             
-            // Create empty result structure for fallback
+            toast.error("Error en el servicio de análisis. Por favor, inténtelo de nuevo más tarde.", {
+              duration: 5000,
+            });
+            
+            // No usamos resultados simulados, devolvemos un resultado vacío
             const emptyResult: PlagiarismResult = {
               percentage: 0,
               sources: [],
@@ -48,10 +52,6 @@ export const checkPlagiarism = async (file: File): Promise<PlagiarismResult> => 
               rawResponses: [{ text: "Error en el análisis", rawResponse: { error } }],
               aiGeneratedProbability: 0
             };
-            
-            toast.error("Error en el servicio de análisis. Por favor, inténtelo de nuevo más tarde.", {
-              duration: 5000,
-            });
             
             resolve(emptyResult);
           }
